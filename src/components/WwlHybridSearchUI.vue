@@ -29,7 +29,7 @@ const props = defineProps({
 
 const emit = defineEmits(['result-click']);
 
-const preset = ref('minilm');
+const preset = ref('embeddinggemma');
 const semanticStatus = ref('Fuzzy search is ready. Semantic search is optional.');
 let alive = true;
 const rootEl = ref(null);

@@ -13,12 +13,13 @@ E2B remains the default. Chat and Compare share the family picker,
 precision controls, engine/download information, candidate labels and tool labels.
 Retired selections show a selection error and offer the default without downloading
 a replacement automatically. LFM 230M and 350M were dropped after this snapshot for
-subpar demo quality; the table below records what was measured at the time.
+subpar demo quality. Qwen3 Tiny was later retired from the catalog for the same
+reason and is no longer offered. The table below records what was measured at the time.
 
 | Family     | Engine                                      | Retained configurations (at snapshot)           | Tool execution                                |
 | ---------- | ------------------------------------------- | ----------------------------------------------- | --------------------------------------------- |
 | Gemma 4    | LiteRT 0.17.1                               | E2B, E4B                                        | Native tools available                        |
-| Qwen3 Tiny | WebLLM 0.2.85                               | 0.6B Q4F16, Q4F32 compatibility                 | Model support documented; integration pending |
+| Qwen3 Tiny | WebLLM 0.2.85                               | 0.6B Q4F16, Q4F32 (retired after this snapshot) | Model support documented; integration pending |
 | LFM2.5     | Transformers.js 4.3.0 / ONNX Runtime WebGPU | 2.6B Q4F16, 2.6B Q4 compatibility (now retained) | Model support documented; integration pending |
 
 LFM models remain candidates. Model-card tool claims do not certify a quantized

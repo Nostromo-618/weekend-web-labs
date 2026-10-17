@@ -5,7 +5,7 @@ test('a stopped pair evaluation keeps completed turns and its partial report', a
   const report = await page.evaluate(async () => {
     const { runPairEvaluation } = await import('/src/lib/model-evaluation.js');
     const controller = new AbortController();
-    const modelIds = ['Qwen3-0.6B-q4f16_1-MLC', 'LFM2.5-2.6B-q4f16-ONNX'];
+    const modelIds = ['gemma-4-E2B-it-web', 'LFM2.5-2.6B-q4f16-ONNX'];
     const state = {
       models: [...modelIds],
       panes: [
@@ -64,7 +64,7 @@ test('pair recovery retries only the stopped pane', async ({ page }) => {
   await page.goto('/');
   const result = await page.evaluate(async () => {
     const { runPairEvaluation } = await import('/src/lib/model-evaluation.js');
-    const modelIds = ['Qwen3-0.6B-q4f16_1-MLC', 'LFM2.5-2.6B-q4f16-ONNX'];
+    const modelIds = ['gemma-4-E2B-it-web', 'LFM2.5-2.6B-q4f16-ONNX'];
     const state = {
       models: [...modelIds],
       busy: false,

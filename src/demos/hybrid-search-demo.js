@@ -139,8 +139,8 @@ installResolvedTheme({ storagePrefix: 'wwl-', defaultTheme: 'dark' });
 createApp(DemoApp)
   .use(VanduoVue, {
     themeDefaults: {
-      PRIMARY_LIGHT: 'sky',
-      PRIMARY_DARK: 'sky',
+      PRIMARY_LIGHT: 'green',
+      PRIMARY_DARK: 'green',
       NEUTRAL: 'neutral',
       RADIUS: '0.25',
       FONT: 'open-sans',

@@ -75,7 +75,7 @@ const DemoApp = {
                       'WebLLM (@mlc-ai/web-llm)',
                     ),
                   ]),
-                  ': Tiny Qwen and LFM specialists; engine and tool support are shown before loading.',
+                  ': Optional host runtime. Qwen3 Tiny is not offered; engine and tool support are shown before loading.',
                 ]),
                 h('li', [
                   h('strong', [
@@ -222,8 +222,8 @@ installResolvedTheme({ storagePrefix: 'wwl-', defaultTheme: 'dark' });
 createApp(DemoApp)
   .use(VanduoVue, {
     themeDefaults: {
-      PRIMARY_LIGHT: 'sky',
-      PRIMARY_DARK: 'sky',
+      PRIMARY_LIGHT: 'green',
+      PRIMARY_DARK: 'green',
       NEUTRAL: 'neutral',
       RADIUS: '0.25',
       FONT: 'open-sans',

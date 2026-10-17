@@ -3,10 +3,10 @@ import Fuse from 'fuse.js';
 import { publicUrl } from './public-url.js';
 
 export const SEARCH_PRESETS = [
-  { id: 'minilm', label: 'Lightweight · MiniLM', download: 'about 23 MB' },
   { id: 'embeddinggemma', label: 'Quality · EmbeddingGemma', download: 'about 300 MB' },
+  { id: 'minilm', label: 'Lightweight · MiniLM', download: 'about 23 MB' },
 ];
-export async function createDocsSearch(preset = 'minilm', overrides = {}) {
+export async function createDocsSearch(preset = 'embeddinggemma', overrides = {}) {
   let indexUrl = overrides.indexUrl;
   let vectorsUrl = overrides.vectorsUrl;
   if (!indexUrl || !vectorsUrl) {

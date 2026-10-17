@@ -15,6 +15,17 @@ The labs hybrid search demo MUST construct search via `HybridSearch` from `@wwl/
 - **WHEN** the UI validates queries or sanitizes doc hrefs
 - **THEN** it uses helpers from `@wwl/wwl-hybrid-search/guardrails/search`
 
+### Requirement: EmbeddingGemma is the offered semantic default
+The hybrid search UI MUST select EmbeddingGemma as the semantic preset before the user chooses another option. MiniLM MUST remain selectable. Selecting a preset MUST NOT download it; semantic download starts only from the explicit enable action. Fuzzy search MUST stay available before that download finishes.
+
+#### Scenario: EmbeddingGemma is selected on first view
+- **WHEN** the hybrid search UI mounts with no prior preset choice
+- **THEN** the semantic model control shows EmbeddingGemma
+
+#### Scenario: Enable still starts the download
+- **WHEN** the user has not activated Enable semantic search
+- **THEN** fuzzy search works and EmbeddingGemma weights are not downloaded
+
 ### Requirement: Semantic preload on mount
 When the hybrid search UI mounts, the system MUST start preloading the semantic search path (embedding model / transformers stack) in the background without blocking the fuzzy search path.
 

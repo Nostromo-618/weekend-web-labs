@@ -11,18 +11,17 @@ On-device browser chat with LiteRT 0.17.1, WebLLM 0.2.85 and Transformers.js 4.3
 
 ## Models and compatibility
 
-Chat and Compare share four primary choices grouped by family. A separate precision control exposes two compatibility variants; selecting a model never starts a download. Labels include engine, download size, candidate status and tool capability.
+Chat and Compare share three primary choices grouped by family. A separate precision control exposes the LFM compatibility variant; selecting a model never starts a download. Labels include engine, download size, candidate status and tool capability.
 
-| Primary choice  | Engine                        | Role                               | Tools                                         |
-| --------------- | ----------------------------- | ---------------------------------- | --------------------------------------------- |
-| Gemma 4 E2B     | LiteRT                        | Default, about 2.0 GB              | Native execution available                    |
-| Gemma 4 E4B     | LiteRT                        | Quality, about 3.0 GB              | Native execution available                    |
-| Qwen3 0.6B Tiny | WebLLM                        | Small assistant, about 352 MB      | Documented model support; integration pending |
-| LFM2.5 2.6B     | Transformers.js → ONNX WebGPU | Reasoning candidate, about 1.55 GB | Documented model support; integration pending |
+| Primary choice | Engine                        | Role                               | Tools                                         |
+| -------------- | ----------------------------- | ---------------------------------- | --------------------------------------------- |
+| Gemma 4 E2B    | LiteRT                        | Default, about 2.0 GB              | Native execution available                    |
+| Gemma 4 E4B    | LiteRT                        | Quality, about 3.0 GB              | Native execution available                    |
+| LFM2.5 2.6B    | Transformers.js → ONNX WebGPU | Reasoning candidate, about 1.55 GB | Documented model support; integration pending |
 
-Tiny Q4F32 and LFM 2.6B Q4 remain explicit precision variants. Missing WebGPU disables loading; shader-f16 compatibility is checked before load. Retired selections display an explanation and offer the default without silently downloading it. All three engines retain worker/runtime isolation; no working model is migrated. Retired spikes, Gemma MLC peers, LFM 230M/350M and optional model families are removed. Existing downloaded models, chats and historical reports remain intact.
+LFM 2.6B Q4 remains an explicit precision variant. Qwen3 0.6B is not offered. Missing WebGPU disables loading; shader-f16 compatibility is checked before load. Retired selections display an explanation and offer the default without silently downloading it. LiteRT and Transformers.js retain worker/runtime isolation; the WebLLM loader remains in the engine with no catalog model. Retired spikes, Gemma MLC peers, Qwen3 Tiny, LFM 230M/350M and optional model families are removed. Existing downloaded models, chats and historical reports remain intact.
 
-Official model-level tool support is recorded with [Gemma](https://deepmind.google/models/gemma/gemma-4/), [Qwen](https://huggingface.co/Qwen/Qwen3-0.6B#agentic-use) and Liquid's [2.6B](https://huggingface.co/LiquidAI/LFM2.5-2.6B#tool-use) cards in the catalog. It does not certify our quantized builds or enable adapters. Only Gemma's integration currently executes tools. Candidate labels remain until fresh validation supports promotion.
+Official model-level tool support is recorded with [Gemma](https://deepmind.google/models/gemma/gemma-4/) and Liquid's [2.6B](https://huggingface.co/LiquidAI/LFM2.5-2.6B#tool-use) cards in the catalog. It does not certify our quantized builds or enable adapters. Only Gemma's integration currently executes tools. Candidate labels remain until fresh validation supports promotion.
 
 Device and storage details are expandable. Browser-reported memory is approximate and does not establish GPU capacity. See [model and guardrail validation](./wwl-model-guardrails-validation.md) for measured browser/model limitations; phone layout emulation does not establish physical phone inference support.
 
@@ -103,7 +102,7 @@ await chat.dispose();
 
 The package default remains `complete`; Labs opts into checked previews according to the remembered preference. Render previews as escaped plain text, and never persist, export or speak them. Existing callback signatures remain supported; `onUpdate` and the returned reply carry final checked content only. Optional structured `onGuardrail` events omit raw rejected content. The workspace package README documents typed options, source context, token accounting and JSON Schema support.
 
-Native LiteRT tools are allowlisted and validated before execution. Rounds, calls, execution time, and result size are bounded; native calls receive native tool-response messages. XML requires an explicit compatibility setting. Tool handlers receive an AbortSignal and should cooperate with cancellation. Qwen and LFM tool execution remain integration-pending. Arguments are checked before execution and results before model ingestion or callbacks; rejected results become fixed errors.
+Native LiteRT tools are allowlisted and validated before execution. Rounds, calls, execution time, and result size are bounded; native calls receive native tool-response messages. XML requires an explicit compatibility setting. Tool handlers receive an AbortSignal and should cooperate with cancellation. LFM tool execution remains integration-pending. Arguments are checked before execution and results before model ingestion or callbacks; rejected results become fixed errors.
 
 ## Local development and storage
 
@@ -115,7 +114,7 @@ pnpm dev
 
 Development probes `/models/<id>/…` for mirrors in ignored `.models/`; an HTML SPA fallback is rejected. Mirrors and evaluation artifacts are excluded from the production build. LiteRT weights use `wwl-litert-models`; Transformers.js chat weights use `wwl-chat-onnx-v1`; WebLLM owns its model caches. Clear storage targets chat-owned records only. Caching is best effort and may fail when the browser denies storage or exceeds its quota. Warm offline inference was verified with an already loaded page and model; a cold offline site visit is not provided by a service worker.
 
-The production build serves bundled JavaScript, LiteRT WASM, ONNX WASM, and pinned Tiny compiled model libraries locally. Model weights remain explicit downloads. Its script policy permits WebAssembly compilation without general JavaScript `unsafe-eval`.
+The production build serves bundled JavaScript, LiteRT WASM, and ONNX WASM locally. Model weights remain explicit downloads. Its script policy permits WebAssembly compilation without general JavaScript `unsafe-eval`.
 
 ## Guardrail policy and attribution
 

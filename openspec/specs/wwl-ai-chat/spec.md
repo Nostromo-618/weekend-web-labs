@@ -14,10 +14,6 @@ The default model MUST be Gemma 4 E2B via LiteRT-LM, and that path MUST preserve
 - **WHEN** the user sends a follow-up message on the LiteRT Gemma default after a prior assistant reply
 - **THEN** generation uses conversation context from prior turns (not latest-turn-only)
 
-#### Scenario: Multi-turn on WebLLM Qwen3 Tiny
-- **WHEN** the user chats on WebLLM Qwen3 0.6B after a prior assistant reply
-- **THEN** generation uses conversation context from prior turns
-
 ### Requirement: Community MLC Gemma is experimental
 Community WebLLM/MLC Gemma packages MAY remain available but MUST be labeled experimental, and the product MUST NOT treat their native multi-turn behavior as reliable.
 
@@ -37,29 +33,26 @@ Labs chat UI MUST send on Enter (Shift+Enter inserts a newline) and MUST keep th
 - **THEN** the list remains scrolled to show the latest content
 
 ### Requirement: Multi-architecture catalog with honest LiteRT labels
-The model catalog MUST keep Gemma 4 E2B LiteRT as the default web-official path, MAY expose LiteRT spikes for other families labeled `spike` / experimental, and MUST offer a capable Tiny peer when LiteRT portable loads are blocked by the runtime.
+The model catalog MUST keep Gemma 4 E2B LiteRT as the default web-official path and MAY expose LiteRT spikes for other families labeled `spike` / experimental. Qwen3 0.6B MUST NOT be offered. A constrained-device warning MUST NOT name a removed model.
 
-#### Scenario: Tiny Qwen3 WebLLM is available
+#### Scenario: Qwen3 Tiny is not offered
 - **WHEN** a user opens the model picker
-- **THEN** a Tiny Qwen3 0.6B WebLLM option is listed
+- **THEN** neither Qwen3 0.6B precision is listed
 
 #### Scenario: Official Gemma web remains default
 - **WHEN** a user opens Labs AI chat without choosing another model
 - **THEN** the default remains Gemma 4 E2B LiteRT with web-official support
 
-### Requirement: Tiny model is not SmolLM2
-The recommended Tiny / weak-device model MUST NOT be SmolLM2-360M.
+#### Scenario: Weak-device warning names no removed model
+- **WHEN** load-capacity heuristics flag a constrained device
+- **THEN** the warning does not recommend Qwen3 0.6B or any other removed model
 
-#### Scenario: Weak-device recommendation
-- **WHEN** load-capacity heuristics recommend a Tiny model
-- **THEN** the recommended model id is the Qwen3 0.6B Tiny entry (WebLLM)
-
-### Requirement: Outdated optional WebLLM models removed
-The catalog MUST NOT offer SmolLM2-360M, Qwen2.5-1.5B, or Llama-3.2-3B as selectable options.
+### Requirement: Outdated optional models removed
+The catalog MUST NOT offer Qwen3 0.6B, SmolLM2-360M, Qwen2.5-1.5B, or Llama-3.2-3B as selectable options.
 
 #### Scenario: Removed models absent from picker
-- **WHEN** the model picker lists optional WebLLM peers
-- **THEN** SmolLM2-360M, Qwen2.5-1.5B, and Llama-3.2-3B are not present
+- **WHEN** the model picker lists catalog choices
+- **THEN** Qwen3 0.6B, SmolLM2-360M, Qwen2.5-1.5B, and Llama-3.2-3B are not present
 
 
 ### Requirement: AiChat engine comes from sibling Labs repo

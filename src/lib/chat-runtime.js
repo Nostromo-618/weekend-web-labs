@@ -18,11 +18,9 @@ function localConfig(base) {
     ...base,
     model_list: base.model_list.map((record) => ({
       ...record,
-      model_lib:
-        MODEL_OPTIONS.some((m) => m.id === record.model_id && m.backend === 'webllm') ||
-        /^Qwen3-0\.6B-q4f(?:16|32)_1-MLC$/.test(record.model_id)
-          ? new URL(publicUrl(`webllm-wasm/${record.model_id}.wasm`), location.href).href
-          : record.model_lib,
+      model_lib: MODEL_OPTIONS.some((m) => m.id === record.model_id && m.backend === 'webllm')
+        ? new URL(publicUrl(`webllm-wasm/${record.model_id}.wasm`), location.href).href
+        : record.model_lib,
     })),
   };
 }

@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { chromium, webkit } from '@playwright/test';
 const reports = [];
-const model = process.env.PRODUCTION_CHAT_MODEL || 'Qwen3-0.6B-q4f16_1-MLC';
+const model = process.env.PRODUCTION_CHAT_MODEL || 'gemma-4-E2B-it-web';
 const label = model
   .toLowerCase()
   .replace(/[^a-z0-9]+/g, '-')

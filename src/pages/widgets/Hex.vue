@@ -49,9 +49,9 @@ const PATH_ACCENT = '#ff9f1c';
 const DEMO_CELL_FILL = 'transparent';
 
 const hexThemeKey = computed(() => {
-  if (typeof document === 'undefined') return 'light:sky';
+  if (typeof document === 'undefined') return 'light:green';
   const theme = document.documentElement.getAttribute('data-theme') || 'light';
-  const primary = document.documentElement.getAttribute('data-primary-color') || 'sky';
+  const primary = document.documentElement.getAttribute('data-primary-color') || 'green';
   return `${theme}:${primary}`;
 });
 

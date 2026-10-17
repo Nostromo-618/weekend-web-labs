@@ -41,12 +41,12 @@ Labs MUST persist and restore vd3 theme preferences using `wwl-` prefixed localS
 
 ### Requirement: Labs global theme defaults for unset preferences
 
-Labs MUST configure vd3 `themeDefaults` so new visitors (no stored `wwl-*` preference) get Open Sans, Neutral, radius `0.5`, and sky primary on the Open Color palette. Labs MUST NOT overwrite existing `wwl-*` preferences with these defaults.
+Labs MUST configure vd3 `themeDefaults` so new visitors (no stored `wwl-*` preference) get Open Sans, Neutral, radius `0.5`, and green primary on the Open Color palette. Labs MUST NOT overwrite existing `wwl-*` preferences with these defaults.
 
 #### Scenario: Defaults apply when no preference is stored
 
 - **WHEN** a visitor loads the Labs site with no `wwl-font-preference`, `wwl-neutral-color`, `wwl-radius`, or `wwl-primary-color` keys
-- **THEN** the effective theme uses font `open-sans`, neutral `neutral`, radius `0.5`, and primary `sky`
+- **THEN** the effective theme uses font `open-sans`, neutral `neutral`, radius `0.5`, and primary `green`
 
 #### Scenario: Stored preferences override defaults
 

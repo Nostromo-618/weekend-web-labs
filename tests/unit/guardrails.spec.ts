@@ -240,7 +240,7 @@ test.describe('Guardrails Unit', () => {
     expect(result.request.max_tokens).toBe(512);
     expect(result.request.temperature).toBe(0.7);
     expect(result.request.top_p).toBe(0.9);
-    expect(result.request.extra_body).toEqual({ enable_thinking: false });
+    expect(result.request.extra_body).toBeUndefined();
     expect(result.messages.at(-1)).toEqual({ role: 'assistant', content: 'Hello there' });
   });
 
@@ -423,8 +423,8 @@ test.describe('Guardrails Unit', () => {
     expect(result.calls).toBe(2);
     expect(result.reloads).toBe(1);
     expect(result.requests).toEqual([
-      { stream: true, max_tokens: 512, temperature: 0.7, top_p: 0.9, extra_body: { enable_thinking: false } },
-      { stream: false, max_tokens: 512, temperature: 0.7, top_p: 0.9, extra_body: { enable_thinking: false } },
+      { stream: true, max_tokens: 512, temperature: 0.7, top_p: 0.9, extra_body: undefined },
+      { stream: false, max_tokens: 512, temperature: 0.7, top_p: 0.9, extra_body: undefined },
     ]);
     expect(result.reply).toBe('Fallback reply');
     expect(result.updates).toEqual(['Fallback reply']);
@@ -448,7 +448,7 @@ test.describe('Guardrails Unit', () => {
           order.push('engine-delete');
         },
       };
-      await chat.setModelId('Qwen3-0.6B-q4f16_1-MLC', { resetMessages: true });
+      await chat.setModelId('LFM2.5-2.6B-q4f16-ONNX', { resetMessages: true });
       order.push(`model:${chat.modelId}`);
       return {
         order,
@@ -462,7 +462,7 @@ test.describe('Guardrails Unit', () => {
     expect(result.order).toEqual([
       'conversation-delete',
       'engine-delete',
-      'model:Qwen3-0.6B-q4f16_1-MLC',
+      'model:LFM2.5-2.6B-q4f16-ONNX',
     ]);
     expect(result.isLoaded).toBe(false);
     expect(result.engine).toBeNull();
@@ -501,9 +501,9 @@ test.describe('Guardrails Unit', () => {
         payloads,
         messages: chat.messages.map((m) => m.role),
         expectedSystem: llmMod.buildChatSystemPrompt(),
-        tinyId: chatMod.TINY_MODEL_ID,
         hasSmol: chatMod.MODEL_OPTIONS.some((m) => m.id.includes('SmolLM2')),
         qwenTiny: chatMod.MODEL_OPTIONS.find((m) => m.id === 'Qwen3-0.6B-q4f16_1-MLC'),
+        qwenF32: chatMod.MODEL_OPTIONS.find((m) => m.id === 'Qwen3-0.6B-q4f32_1-MLC'),
         qwenLiteRT: chatMod.MODEL_OPTIONS.find((m) => m.id === 'qwen3-0.6B-litert'),
       };
     });
@@ -513,10 +513,9 @@ test.describe('Guardrails Unit', () => {
     expect(result.payloads[0].system).toBe(result.expectedSystem);
     expect(result.payloads[0].system).toContain('Weekend Web Labs');
     expect(result.messages).toEqual(['user', 'assistant', 'user', 'assistant']);
-    expect(result.tinyId).toBe('Qwen3-0.6B-q4f16_1-MLC');
     expect(result.hasSmol).toBe(false);
-    expect(result.qwenTiny?.tier).toBe('Tiny');
-    expect(result.qwenTiny?.backend).toBe('webllm');
+    expect(result.qwenTiny).toBeUndefined();
+    expect(result.qwenF32).toBeUndefined();
     expect(result.qwenLiteRT).toBeUndefined();
   });
 
@@ -560,18 +559,19 @@ test.describe('Guardrails Unit', () => {
         mobileGpu: { level: mobileGpu.level },
         ok: { level: ok.level },
         tinyOk: { level: tinyOk.level },
-        copy: mod.buildWeakDeviceConfirmCopy({ approxGb: 2, recommendedLabel: 'Qwen3 0.6B MLC' }),
+        copy: mod.buildWeakDeviceConfirmCopy({ approxGb: 2 }),
         freezeHint: mod.LOAD_FREEZE_HINT,
       };
     });
 
     expect(result.high.level).toBe('high');
-    expect(result.high.recommendedModelId).toBe('Qwen3-0.6B-q4f16_1-MLC');
+    expect(result.high.recommendedModelId).toBeNull();
     expect(result.mobileGpu.level).toBe('high');
     expect(result.ok.level).toBe('ok');
-    expect(result.tinyOk.level).toBe('caution');
+    expect(result.tinyOk.level).toBe('high');
     expect(result.copy).toContain('Load anyway?');
-    expect(result.copy).toContain('Qwen3 0.6B MLC');
+    expect(result.copy).toContain('Close other heavy tabs');
+    expect(result.copy).not.toMatch(/Tiny/);
     expect(result.freezeHint).toMatch(/freeze/i);
   });
 

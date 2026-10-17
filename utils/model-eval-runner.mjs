@@ -4,7 +4,7 @@
  *
  * Usage:
  *   pnpm model-eval
- *   pnpm model-eval -- --models gemma-4-E2B-it-web,gemma-4-E4B-it-web,Qwen3-0.6B-q4f16_1-MLC
+ *   pnpm model-eval -- --models gemma-4-E2B-it-web,gemma-4-E4B-it-web,LFM2.5-2.6B-q4f16-ONNX
  *   MODEL_EVAL_BASE_URL=http://localhost:3000 pnpm model-eval
  *
  * Expects Vite (`pnpm dev`) serving the repo, or set MODEL_EVAL_BASE_URL.

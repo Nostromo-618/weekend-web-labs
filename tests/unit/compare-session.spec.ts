@@ -11,9 +11,9 @@ test.describe('paired local chat session', () => {
     const result = await page.evaluate(async () => {
       const { CompareSession } = await import('/src/lib/compare-session.js');
       const pairings = [
-        ['Qwen3-0.6B-q4f16_1-MLC', 'Qwen3-0.6B-q4f16_1-MLC'],
+        ['gemma-4-E2B-it-web', 'gemma-4-E2B-it-web'],
         ['LFM2.5-2.6B-q4f16-ONNX', 'LFM2.5-2.6B-q4-ONNX'],
-        ['Qwen3-0.6B-q4f16_1-MLC', 'LFM2.5-2.6B-q4f16-ONNX'],
+        ['LFM2.5-2.6B-q4f16-ONNX', 'gemma-4-E4B-it-web'],
         ['gemma-4-E2B-it-web', 'LFM2.5-2.6B-q4f16-ONNX'],
         ['gemma-4-E2B-it-web', 'gemma-4-E4B-it-web'],
       ];
@@ -195,7 +195,7 @@ test.describe('paired local chat session', () => {
         }
       }
       const session = new CompareSession({
-        modelA: 'Qwen3-0.6B-q4f16_1-MLC',
+        modelA: 'gemma-4-E2B-it-web',
         createChat: (id, index) => new FakeChat(id, index),
       });
       session.system = { webgpuSupported: true, shaderF16: true };
@@ -279,7 +279,7 @@ test.describe('paired local chat session', () => {
       await session.loadPair();
       await session.send('serial');
       const lowerMemoryMaximum = metrics.maximum;
-      await session.select(1, 'Qwen3-0.6B-q4f16_1-MLC');
+      await session.select(1, 'LFM2.5-2.6B-q4f16-ONNX');
       const archived =
         session.archives.length === 1 &&
         session.state.panes.every((pane) => pane.turns.length === 0);
@@ -330,7 +330,7 @@ test.describe('paired local chat session', () => {
         }
       }
       const blocked = new CompareSession({
-        modelA: 'Qwen3-0.6B-q4f16_1-MLC',
+        modelA: 'gemma-4-E2B-it-web',
         createChat: (id) => new FakeChat(id),
         getDeviceSignals: async () => ({ webgpuSupported: false, shaderF16: false }),
       });
@@ -340,7 +340,7 @@ test.describe('paired local chat session', () => {
       await blocked.dispose();
 
       const limitedRam = new CompareSession({
-        modelA: 'Qwen3-0.6B-q4f16_1-MLC',
+        modelA: 'gemma-4-E2B-it-web',
         createChat: (id) => new FakeChat(id),
         getDeviceSignals: async () => ({
           webgpuSupported: true,

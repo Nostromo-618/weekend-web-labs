@@ -11,7 +11,7 @@ test.describe('AiChat tool calling', () => {
     const message = await page.evaluate(async () => {
       const { AiChat, TOOLS_UNSUPPORTED_ERROR } =
         await import('/node_modules/@wwl/wwl-ai-chat/dist/index.js');
-      const chat = new AiChat({ modelId: 'Qwen3-0.6B-q4f16_1-MLC' });
+      const chat = new AiChat({ modelId: 'LFM2.5-2.6B-q4f16-ONNX' });
       chat.registerTools([{ name: 'ping', description: 'ping', parameters: { type: 'object' } }]);
       chat._isLoaded = true;
       chat.engine = {};

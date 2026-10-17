@@ -25,7 +25,7 @@ const FAN_PRIMARY_COLORS = PRIMARY_COLORS.filter((c) => FAN_HUE_SET.has(c.key));
 
 /**
  * Keys for the package swatches fan — Ink plus the twelve accretion hues.
- * Same set as vd3-docs `DOCS_PRIMARY_SWATCH_KEYS`. Labs defaults stay sky via
+ * Same set as vd3-docs `DOCS_PRIMARY_SWATCH_KEYS`. Labs defaults stay green via
  * `WWL_THEME_DEFAULTS` / `wwl-` storage.
  */
 export const LABS_PRIMARY_SWATCH_KEYS = Object.freeze([

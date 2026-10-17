@@ -11,8 +11,8 @@
  */
 export const WWL_THEME_DEFAULTS = Object.freeze({
   PALETTE: 'open-color',
-  PRIMARY_LIGHT: 'sky',
-  PRIMARY_DARK: 'sky',
+  PRIMARY_LIGHT: 'green',
+  PRIMARY_DARK: 'green',
   NEUTRAL: 'neutral',
   RADIUS: '0.5',
   FONT: 'open-sans',

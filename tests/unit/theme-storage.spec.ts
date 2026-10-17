@@ -51,8 +51,8 @@ test.describe('vdl theme defaults', () => {
     expect(defaults.NEUTRAL).toBe('neutral');
     expect(defaults.RADIUS).toBe('0.5');
     expect(defaults.PALETTE).toBe('open-color');
-    expect(defaults.PRIMARY_LIGHT).toBe('sky');
-    expect(defaults.PRIMARY_DARK).toBe('sky');
+    expect(defaults.PRIMARY_LIGHT).toBe('green');
+    expect(defaults.PRIMARY_DARK).toBe('green');
     expect(defaults.THEME).toBe('system');
   });
 

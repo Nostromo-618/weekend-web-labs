@@ -5,9 +5,9 @@ import { VdHexGrid } from '@wwl/wwl-cbun/hex-grid';
 const themeTick = ref(0);
 
 const hexThemeKey = computed(() => {
-  if (typeof document === 'undefined') return `light:sky:${themeTick.value}`;
+  if (typeof document === 'undefined') return `light:green:${themeTick.value}`;
   const theme = document.documentElement.getAttribute('data-theme') || 'light';
-  const primary = document.documentElement.getAttribute('data-primary-color') || 'sky';
+  const primary = document.documentElement.getAttribute('data-primary-color') || 'green';
   return `${theme}:${primary}:${themeTick.value}`;
 });
 

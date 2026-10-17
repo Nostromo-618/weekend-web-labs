@@ -1,17 +1,4 @@
 {
   "webllm": "0.2.85",
-  "assets": [
-    {
-      "model": "Qwen3-0.6B-q4f16_1-MLC",
-      "source": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_84/base/Qwen3-0.6B-q4f16_1_cs1k-webgpu.wasm",
-      "bytes": 5535989,
-      "sha256": "4db800b24119204e1a0386e8a12e084d5012aa60f77c5bffad362f20498df912"
-    },
-    {
-      "model": "Qwen3-0.6B-q4f32_1-MLC",
-      "source": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_84/base/Qwen3-0.6B-q4f32_1_cs1k-webgpu.wasm",
-      "bytes": 5419279,
-      "sha256": "361f1310ae616863bccbc638f075f7484816b45eb30ffecf08539272a1b2ae1e"
-    }
-  ]
+  "assets": []
 }

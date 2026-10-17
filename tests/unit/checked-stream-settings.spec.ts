@@ -273,7 +273,7 @@ test('Compare keeps preview timing and text outside committed answers and export
       }
     }
     const session = new CompareSession({
-      modelA: 'Qwen3-0.6B-q4f16_1-MLC',
+      modelA: 'gemma-4-E2B-it-web',
       createChat: () => new Chat(),
     });
     session.system = { webgpuSupported: true, shaderF16: true };

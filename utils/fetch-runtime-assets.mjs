@@ -1,18 +1,13 @@
-/** Fetch version-matched Tiny compiled libraries. Run explicitly when updating WebLLM. */
+/** Fetch compiled libraries for catalog WebLLM models. Run explicitly when updating WebLLM. */
 import fs from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { MODEL_OPTIONS } from '@wwl/wwl-ai-chat';
-import { prebuiltAppConfig } from '@mlc-ai/web-llm';
 const dir = new URL('../public/webllm-wasm/', import.meta.url);
 await fs.mkdir(dir, { recursive: true });
 const records = MODEL_OPTIONS.filter((m) => m.backend === 'webllm' && m.modelLibUrl).map((m) => ({
   model_id: m.id,
   model_lib: m.modelLibUrl,
 }));
-for (const record of prebuiltAppConfig.model_list.filter((m) =>
-  /^Qwen3-0\.6B-q4f32_1-MLC$/.test(m.model_id),
-))
-  records.push(record);
 const assets = [];
 for (const record of records) {
   const response = await fetch(record.model_lib);

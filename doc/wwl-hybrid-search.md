@@ -4,7 +4,7 @@ Labs consumes the private sibling `@wwl/wwl-hybrid-search`. Its README documents
 
 ## Model choice and loading
 
-Fuzzy search starts after the local corpus loads and does not need WebGPU or model storage. Labs explicitly selects MiniLM (`Xenova/all-MiniLM-L6-v2`, q8, 384 dimensions, approximately 23 MB). EmbeddingGemma (`onnx-community/embeddinggemma-300m-ONNX`, q8, 768 dimensions, approximately 300 MB) is an optional quality download. Choosing a preset does not download it: select **Enable semantic search** to load it. Typing and Enter use fuzzy retrieval until that model is ready.
+Fuzzy search starts after the local corpus loads and does not need WebGPU or model storage. Labs offers EmbeddingGemma (`onnx-community/embeddinggemma-300m-ONNX`, q8, 768 dimensions, approximately 300 MB) as the default semantic option. MiniLM (`Xenova/all-MiniLM-L6-v2`, q8, 384 dimensions, approximately 23 MB) stays available as the lighter choice. Choosing a preset does not download it: select **Enable semantic search** to load it. Typing and Enter use fuzzy retrieval until that model is ready.
 
 The runtime rejects mismatched models, dimensions, corpus identity, dtype, pooling or prefixes before importing Transformers.js. A failure leaves fuzzy search usable with an explanatory status. Query vectors must also have matching dimensions. Each UI owns and disposes its extractor. Storage-denied operation is tested for fuzzy search; semantic model caching remains browser-dependent.
 

@@ -1,31 +1,26 @@
 import { test, expect } from '@playwright/test';
-const primary = [
-  'gemma-4-E2B-it-web',
-  'gemma-4-E4B-it-web',
-  'Qwen3-0.6B-q4f16_1-MLC',
-  'LFM2.5-2.6B-q4f16-ONNX',
-];
-test('chat picker exposes four families and explicit precision without downloads', async ({
+const primary = ['gemma-4-E2B-it-web', 'gemma-4-E4B-it-web', 'LFM2.5-2.6B-q4f16-ONNX'];
+test('chat picker exposes retained families and explicit precision without downloads', async ({
   page,
 }) => {
   await page.goto('/tests/fixtures/chat-vue-harness.html');
   const settings = page.getByRole('button', { name: 'Settings', exact: true });
   if ((await settings.getAttribute('aria-expanded')) === 'false') await settings.click();
   const picker = page.locator('#wwl-ai-model-select');
-  await expect(picker.locator('option')).toHaveCount(4);
+  await expect(picker.locator('option')).toHaveCount(3);
   expect(
     await picker
       .locator('option')
       .evaluateAll((els) => els.map((el) => (el as HTMLOptionElement).value)),
   ).toEqual(primary);
-  await expect(picker.locator('optgroup')).toHaveCount(3);
+  await expect(picker.locator('optgroup')).toHaveCount(2);
   await picker.selectOption(primary[2]);
   const precision = page.locator('#wwl-ai-precision-select');
   await expect(precision.locator('option')).toHaveCount(2);
-  await precision.selectOption('Qwen3-0.6B-q4f32_1-MLC');
+  await precision.selectOption('LFM2.5-2.6B-q4-ONNX');
   await expect(picker).toHaveValue(primary[2]);
-  await expect(precision).toHaveValue('Qwen3-0.6B-q4f32_1-MLC');
-  await expect(picker.locator('option', { hasText: 'integration pending' })).toHaveCount(2);
+  await expect(precision).toHaveValue('LFM2.5-2.6B-q4-ONNX');
+  await expect(picker.locator('option', { hasText: 'integration pending' })).toHaveCount(1);
   await expect(picker.locator('option', { hasText: 'Candidate' })).toHaveCount(1);
   expect(await page.evaluate(() => window['chatQA'].loads)).toBe(0);
 });
@@ -42,11 +37,11 @@ test('retired chat selection explains removal and offers an unloaded default', a
 test('Compare shares primary labels and precision choices without loading', async ({ page }) => {
   await page.goto('/tests/fixtures/model-catalog-harness.html');
   for (const id of [0, 1])
-    await expect(page.locator(`#wwl-compare-model-${id} optgroup option`)).toHaveCount(4);
-  await page.locator('#wwl-compare-model-1').selectOption(primary[3]);
+    await expect(page.locator(`#wwl-compare-model-${id} optgroup option`)).toHaveCount(3);
+  await page.locator('#wwl-compare-model-1').selectOption(primary[2]);
   await expect(page.locator('#wwl-compare-precision-1 option')).toHaveCount(2);
   await page.locator('#wwl-compare-precision-1').selectOption('LFM2.5-2.6B-q4-ONNX');
-  await expect(page.locator('#wwl-compare-model-1')).toHaveValue(primary[3]);
+  await expect(page.locator('#wwl-compare-model-1')).toHaveValue(primary[2]);
   await expect(
     page.getByText('Integration pending; this build has not been certified for tools.'),
   ).toBeVisible();

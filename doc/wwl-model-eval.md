@@ -10,7 +10,7 @@ LABS_STABLE_EVAL=1 pnpm dev --host 127.0.0.1 --port 3001
 MODEL_EVAL_BASE_URL=http://127.0.0.1:3001 pnpm model-eval --cold
 ```
 
-The default run evaluates E2B, E4B, Tiny and the three LFM candidates serially in a dedicated Chrome profile at `.models/.refresh-eval-profile`. `--cold` clears only chat-owned caches in that evaluation profile. The runner enables WebGPU for evaluation and does not disable browser web security. `MODEL_EVAL_HEADLESS=1` selects headless mode. Restart the stable server after source edits and before the next run.
+The default run evaluates E2B, E4B, and the LFM candidates serially in a dedicated Chrome profile at `.models/.refresh-eval-profile`. `--cold` clears only chat-owned caches in that evaluation profile. The runner enables WebGPU for evaluation and does not disable browser web security. `MODEL_EVAL_HEADLESS=1` selects headless mode. Restart the stable server after source edits and before the next run.
 
 Reports are saved to `qa/local-refresh/model-eval/report.json` and `index.html`. They include runtime/model versions, initial load source and duration, browser signals, case timings, and failure excerpts. Browser memory signals are approximate; serial evaluation avoids concurrent large engines.
 
@@ -26,6 +26,6 @@ Phone layout emulation, synthetic IME events, and simulated GPU loss do not repl
 
 Paired reports use schema version 2 with a single `turns` array (one list per pane). Chat evaluations cover General only.
 
-`--models` also accepts Tiny Q4F32 and LFM 2.6B Q4. `MODEL_EVAL_PROFILE` selects a dedicated test profile. `MODEL_EVAL_DISABLE_HTTP_CACHE=1` disables Chrome HTTP caching while retaining app-owned warm-cache checks. `--release-caches` explicitly clears only each tested model's chat-owned caches after its warm checks. Use these options only with authorization to clear test caches. `MODEL_EVAL_STORAGE_QUOTA_BYTES` is a diagnostic CDP quota override and is recorded in the report; it does not certify ordinary device storage behavior.
+`--models` also accepts LFM 2.6B Q4. Qwen3 0.6B is not in the catalog. `MODEL_EVAL_PROFILE` selects a dedicated test profile. `MODEL_EVAL_DISABLE_HTTP_CACHE=1` disables Chrome HTTP caching while retaining app-owned warm-cache checks. `--release-caches` explicitly clears only each tested model's chat-owned caches after its warm checks. Use these options only with authorization to clear test caches. `MODEL_EVAL_STORAGE_QUOTA_BYTES` is a diagnostic CDP quota override and is recorded in the report; it does not certify ordinary device storage behavior.
 
 `firstAnswerMs` retains its legacy JSON name and now measures delivery of the complete checked answer. Compare displays “Checked reply”. Restart `LABS_STABLE_EVAL=1` servers after rebuilding linked packages, because stable mode disables file watching.
