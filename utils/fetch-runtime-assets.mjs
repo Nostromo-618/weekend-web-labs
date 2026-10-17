@@ -23,6 +23,6 @@ for (const record of records) {
 }
 await fs.writeFile(
   new URL('manifest.json', dir),
-  JSON.stringify({ webllm: '0.2.85', assets }, null, 2) + '\n',
+  JSON.stringify({ webllm: '0.2.86', assets }, null, 2) + '\n',
 );
 console.log(assets);

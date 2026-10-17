@@ -1,6 +1,6 @@
 # wwl-ai-chat
 
-On-device browser chat with LiteRT 0.17.1, WebLLM 0.2.85 and Transformers.js 4.3.0 / ONNX Runtime WebGPU. Labs links the local sibling package and uses a WebLLM module worker with local runtime/WASM assets. Prompts are processed locally; explicit model downloads still need a network connection unless available in browser cache or a development mirror.
+On-device browser chat with LiteRT 0.17.1, WebLLM 0.2.86 and Transformers.js 4.3.0 / ONNX Runtime WebGPU. Labs links the local sibling package and uses a WebLLM module worker with local runtime/WASM assets. Prompts are processed locally; explicit model downloads still need a network connection unless available in browser cache or a development mirror.
 
 ## Getting started
 
@@ -11,15 +11,19 @@ On-device browser chat with LiteRT 0.17.1, WebLLM 0.2.85 and Transformers.js 4.3
 
 ## Models and compatibility
 
-Chat and Compare share three primary choices grouped by family. A separate precision control exposes the LFM compatibility variant; selecting a model never starts a download. Labels include engine, download size, candidate status and tool capability.
+Chat and Compare share seven primary choices grouped by family. Gemma 4 E2B remains the default. A separate precision control exposes the LFM compatibility variant; selecting a model never starts a download. Labels include engine, download size, candidate status and tool capability.
 
-| Primary choice | Engine                        | Role                               | Tools                                         |
-| -------------- | ----------------------------- | ---------------------------------- | --------------------------------------------- |
-| Gemma 4 E2B    | LiteRT                        | Default, about 2.0 GB              | Native execution available                    |
-| Gemma 4 E4B    | LiteRT                        | Quality, about 3.0 GB              | Native execution available                    |
-| LFM2.5 2.6B    | Transformers.js → ONNX WebGPU | Reasoning candidate, about 1.55 GB | Documented model support; integration pending |
+| Primary choice                  | Engine                        | Role                                                     | Tools                                         |
+| ------------------------------- | ----------------------------- | -------------------------------------------------------- | --------------------------------------------- |
+| Gemma 4 E2B                     | LiteRT                        | Default, about 2.0 GB                                    | Native execution available                    |
+| Gemma 4 E4B                     | LiteRT                        | Quality, about 3.0 GB                                    | Native execution available                    |
+| LFM2.5 2.6B                     | Transformers.js → ONNX WebGPU | Reasoning candidate, about 1.55 GB                       | Documented model support; integration pending |
+| Ministral 3 3B Instruct         | WebLLM                        | Experimental, about 1.9 GB, 4096-token context           | Documented model support; integration pending |
+| Ministral 3 3B Reasoning        | WebLLM                        | Experimental reasoning peer beside LFM, about 1.9 GB     | Documented model support; integration pending |
+| Ministral 3 3B Instruct ONNX    | Transformers.js → ONNX WebGPU | Experimental text-only q4, about 3.1 GB                  | Documented model support; integration pending |
+| Mistral 7B Instruct v0.3        | WebLLM                        | Experimental, about 4.1 GB, 4096-token context           | Documented model support; integration pending |
 
-LFM 2.6B Q4 remains an explicit precision variant. Qwen3 0.6B is not offered. Missing WebGPU disables loading; shader-f16 compatibility is checked before load. Retired selections display an explanation and offer the default without silently downloading it. LiteRT and Transformers.js retain worker/runtime isolation; the WebLLM loader remains in the engine with no catalog model. Retired spikes, Gemma MLC peers, Qwen3 Tiny, LFM 230M/350M and optional model families are removed. Existing downloaded models, chats and historical reports remain intact.
+LFM 2.6B Q4 remains an explicit precision variant. Qwen3 0.6B is not offered. The Ministral ONNX choice loads `decoder_model_merged_q4` and `embed_tokens_fp16` only; it does not download the vision encoder, and its catalog budget is the exported 16,384-token RoPE base rather than the 256k model card. WebLLM choices require shader-f16. Missing WebGPU disables loading; shader-f16 compatibility is checked before load. Retired selections display an explanation and offer the default without silently downloading it. LiteRT, WebLLM and Transformers.js retain worker/runtime isolation. Retired spikes, Gemma MLC peers, Qwen3 Tiny, LFM 230M/350M, q4f32 twins, Mistral Small 4, and Ministral 8B/14B are not offered. Existing downloaded models, chats and historical reports remain intact.
 
 Official model-level tool support is recorded with [Gemma](https://deepmind.google/models/gemma/gemma-4/) and Liquid's [2.6B](https://huggingface.co/LiquidAI/LFM2.5-2.6B#tool-use) cards in the catalog. It does not certify our quantized builds or enable adapters. Only Gemma's integration currently executes tools. Candidate labels remain until fresh validation supports promotion.
 

@@ -1,4 +1,23 @@
 {
-  "webllm": "0.2.85",
-  "assets": []
+  "webllm": "0.2.86",
+  "assets": [
+    {
+      "model": "Ministral-3-3B-Instruct-2512-BF16-q4f16_1-MLC",
+      "source": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_86/base/Ministral-3-3B-Instruct-2512-BF16-q4f16_1_cs1k-webgpu.wasm",
+      "bytes": 6062183,
+      "sha256": "3fce441e10c48c91fc65653d5a2a2032015c749664dd19433e3f82d5206a4041"
+    },
+    {
+      "model": "Ministral-3-3B-Reasoning-2512-q4f16_1-MLC",
+      "source": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_86/base/Ministral-3-3B-Reasoning-2512-q4f16_1_cs1k-webgpu.wasm",
+      "bytes": 6062183,
+      "sha256": "3fce441e10c48c91fc65653d5a2a2032015c749664dd19433e3f82d5206a4041"
+    },
+    {
+      "model": "Mistral-7B-Instruct-v0.3-q4f16_1-MLC",
+      "source": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_86/base/Mistral-7B-Instruct-v0.3-q4f16_1_cs1k-webgpu.wasm",
+      "bytes": 6071171,
+      "sha256": "eaaf2057af594cf6a7427904af7596096316c44bfdd9d787190f030fa7c96153"
+    }
+  ]
 }

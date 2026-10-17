@@ -1,10 +1,12 @@
 import {
   AutoTokenizer,
   AutoModelForCausalLM,
+  Ministral3ForCausalLM,
   TextStreamer,
   InterruptableStoppingCriteria,
   env,
 } from '@huggingface/transformers';
+import { onnxTextLoadPlan } from '@wwl/wwl-ai-chat';
 import { publicUrl } from '../lib/public-url.js';
 
 env.backends.onnx.wasm.wasmPaths = publicUrl('transformers-wasm/');
@@ -57,19 +59,29 @@ self.onmessage = async ({ data: { id, method, args } }) => {
         source: args.source ? 'local' : 'runtime-managed',
       });
       await cacheSetup;
+      const plan = onnxTextLoadPlan(option);
       const settings = {
         revision: option.revision,
         device: 'webgpu',
-        dtype: option.precision,
-        use_external_data_format: option.externalDataFiles || 1,
-        progress_callback: (progress) =>
+        dtype: plan.dtype,
+        ...(plan.useExternalDataFormat == null
+          ? {}
+          : { use_external_data_format: plan.useExternalDataFormat }),
+        progress_callback: (progress) => {
+          const file = String(progress.file || '');
+          if (plan.modelClass === 'Ministral3ForCausalLM' && file.includes('vision_encoder')) {
+            throw new Error('Text-only Ministral load must not fetch the vision encoder.');
+          }
           send(id, 'progress', {
             stage: progress.status === 'ready' ? 'compiling' : 'downloading',
             text: progress.file || progress.status,
             loaded: (progress.progress || 0) / 100,
             source: args.source ? 'local' : 'runtime-managed',
-          }),
+          });
+        },
       };
+      const modelClass =
+        plan.modelClass === 'Ministral3ForCausalLM' ? Ministral3ForCausalLM : AutoModelForCausalLM;
       send(id, 'progress', {
         stage: 'downloading',
         text: 'Loading model tokenizer…',
@@ -83,7 +95,7 @@ self.onmessage = async ({ data: { id, method, args } }) => {
         loaded: 0,
         source: args.source ? 'local' : 'runtime-managed',
       });
-      model = await AutoModelForCausalLM.from_pretrained(source, settings);
+      model = await modelClass.from_pretrained(source, settings);
       result = true;
     } else if (method === 'countTokens') {
       result = tokenizer.encode(template(args.messages)).length;

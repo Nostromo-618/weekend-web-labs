@@ -1,5 +1,13 @@
 import { test, expect } from '@playwright/test';
-const primary = ['gemma-4-E2B-it-web', 'gemma-4-E4B-it-web', 'LFM2.5-2.6B-q4f16-ONNX'];
+const primary = [
+  'gemma-4-E2B-it-web',
+  'gemma-4-E4B-it-web',
+  'LFM2.5-2.6B-q4f16-ONNX',
+  'Ministral-3-3B-Instruct-2512-BF16-q4f16_1-MLC',
+  'Ministral-3-3B-Reasoning-2512-q4f16_1-MLC',
+  'Ministral-3-3B-Instruct-2512-q4-ONNX',
+  'Mistral-7B-Instruct-v0.3-q4f16_1-MLC',
+];
 test('chat picker exposes retained families and explicit precision without downloads', async ({
   page,
 }) => {
@@ -7,21 +15,27 @@ test('chat picker exposes retained families and explicit precision without downl
   const settings = page.getByRole('button', { name: 'Settings', exact: true });
   if ((await settings.getAttribute('aria-expanded')) === 'false') await settings.click();
   const picker = page.locator('#wwl-ai-model-select');
-  await expect(picker.locator('option')).toHaveCount(3);
+  await expect(picker.locator('option')).toHaveCount(primary.length);
   expect(
     await picker
       .locator('option')
       .evaluateAll((els) => els.map((el) => (el as HTMLOptionElement).value)),
   ).toEqual(primary);
-  await expect(picker.locator('optgroup')).toHaveCount(2);
+  expect(
+    await picker
+      .locator('optgroup')
+      .evaluateAll((els) => els.map((el) => (el as HTMLOptGroupElement).label)),
+  ).toEqual(['Gemma 4', 'Liquid LFM 2.5', 'Ministral 3', 'Mistral 7B']);
   await picker.selectOption(primary[2]);
   const precision = page.locator('#wwl-ai-precision-select');
   await expect(precision.locator('option')).toHaveCount(2);
   await precision.selectOption('LFM2.5-2.6B-q4-ONNX');
   await expect(picker).toHaveValue(primary[2]);
   await expect(precision).toHaveValue('LFM2.5-2.6B-q4-ONNX');
-  await expect(picker.locator('option', { hasText: 'integration pending' })).toHaveCount(1);
+  await expect(picker.locator('option', { hasText: 'integration pending' })).toHaveCount(5);
   await expect(picker.locator('option', { hasText: 'Candidate' })).toHaveCount(1);
+  await expect(picker.locator('option', { hasText: 'Qwen' })).toHaveCount(0);
+  await expect(page.getByText('Gemma 4 E2B is the default.')).toBeVisible();
   expect(await page.evaluate(() => window['chatQA'].loads)).toBe(0);
 });
 test('retired chat selection explains removal and offers an unloaded default', async ({ page }) => {
@@ -37,7 +51,9 @@ test('retired chat selection explains removal and offers an unloaded default', a
 test('Compare shares primary labels and precision choices without loading', async ({ page }) => {
   await page.goto('/tests/fixtures/model-catalog-harness.html');
   for (const id of [0, 1])
-    await expect(page.locator(`#wwl-compare-model-${id} optgroup option`)).toHaveCount(3);
+    await expect(page.locator(`#wwl-compare-model-${id} optgroup option`)).toHaveCount(
+      primary.length,
+    );
   await page.locator('#wwl-compare-model-1').selectOption(primary[2]);
   await expect(page.locator('#wwl-compare-precision-1 option')).toHaveCount(2);
   await page.locator('#wwl-compare-precision-1').selectOption('LFM2.5-2.6B-q4-ONNX');

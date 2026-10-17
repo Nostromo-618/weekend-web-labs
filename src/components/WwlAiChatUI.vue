@@ -1292,8 +1292,8 @@ defineExpose({ suspend, getModelId: () => selectedModelId.value });
               </div>
 
               <p class="vd-text-muted vd-text-sm">
-                Gemma 4 is the primary family. Optional small/fast models are available when you
-                need a lighter download. Inference stays in your browser.
+                Gemma 4 E2B is the default. Experimental Ministral 3 and Mistral 7B choices are
+                optional, and Qwen3 0.6B is not offered. Inference stays in your browser.
               </p>
 
               <div v-if="(loading || progressText) && !errorBanner" class="wwl-ai-progress">

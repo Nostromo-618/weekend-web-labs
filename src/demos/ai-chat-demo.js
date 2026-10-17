@@ -75,7 +75,7 @@ const DemoApp = {
                       'WebLLM (@mlc-ai/web-llm)',
                     ),
                   ]),
-                  ': Optional host runtime. Qwen3 Tiny is not offered; engine and tool support are shown before loading.',
+                  ': Experimental Ministral 3 and Mistral 7B chat models. Qwen3 0.6B is not offered; tool integration for these models is pending.',
                 ]),
                 h('li', [
                   h('strong', [

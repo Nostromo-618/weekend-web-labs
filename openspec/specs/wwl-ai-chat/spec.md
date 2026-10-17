@@ -54,6 +54,25 @@ The catalog MUST NOT offer Qwen3 0.6B, SmolLM2-360M, Qwen2.5-1.5B, or Llama-3.2-
 - **WHEN** the model picker lists catalog choices
 - **THEN** Qwen3 0.6B, SmolLM2-360M, Qwen2.5-1.5B, and Llama-3.2-3B are not present
 
+### Requirement: Experimental Mistral choices stay optional
+The catalog MUST keep Gemma 4 E2B LiteRT as the default. It MAY offer four experimental choices: Ministral 3 3B Instruct WebLLM q4f16, Ministral 3 3B Reasoning WebLLM q4f16, text-only Ministral 3 3B Instruct ONNX q4, and Mistral 7B Instruct v0.3 WebLLM q4f16. Chat and documentation MUST be enabled for those choices. Tool execution MUST stay pending. WebLLM choices MUST require shader-f16 and use a 4096-token context. The ONNX choice MUST load the q4 decoder and fp16 token embeddings and MUST NOT download a vision encoder. Its context budget MUST follow the exported ONNX graph rather than the 256k model card. q4f32 twins, Mistral Small 4, and Ministral 8B/14B MUST NOT be offered. The reasoning WebLLM choice MUST remain a peer of LFM 2.5 and MUST NOT replace it.
+
+#### Scenario: Default remains Gemma 4 E2B
+- **WHEN** a user opens Labs AI chat without choosing another model
+- **THEN** the default remains Gemma 4 E2B LiteRT
+
+#### Scenario: Experimental choices are listed
+- **WHEN** the model picker lists catalog choices
+- **THEN** the four experimental Mistral choices are present, labeled experimental, and Gemma 4 E2B is still the default
+
+#### Scenario: Qwen3 Tiny remains absent
+- **WHEN** the model picker lists catalog choices
+- **THEN** Qwen3 0.6B is not present
+
+#### Scenario: ONNX text stack omits the vision encoder
+- **WHEN** the Ministral 3 Instruct ONNX choice is inspected
+- **THEN** its pinned files include the q4 merged decoder and fp16 token embeddings and do not include a vision encoder
+
 
 ### Requirement: AiChat engine comes from sibling Labs repo
 The labs AI chat demo MUST import `AiChat` and related helpers from `@wwl/wwl-ai-chat`, and markdown from `@wwl/wwl-ai-chat/markdown`, resolved via `link:../wwl-ai-chat`. Labs MUST NOT treat a local `ai-chat.js` as the engine SoT.

@@ -87,8 +87,8 @@ for (const name of (await fs.readdir(path.join(ortRoot, 'dist'))).filter((name) 
   );
 }
 const wasmManifest = await json('public/webllm-wasm/manifest.json');
-assert.equal(wasmManifest.webllm, '0.2.85');
-assert.equal((await json('node_modules/@mlc-ai/web-llm/package.json')).version, '0.2.85');
+assert.equal(wasmManifest.webllm, '0.2.86');
+assert.equal((await json('node_modules/@mlc-ai/web-llm/package.json')).version, '0.2.86');
 for (const asset of wasmManifest.assets) {
   const bytes = await read(`dist/webllm-wasm/${asset.model}.wasm`);
   assert.equal(bytes.length, asset.bytes);
