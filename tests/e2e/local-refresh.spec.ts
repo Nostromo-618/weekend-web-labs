@@ -179,7 +179,7 @@ test('Hex Earth lazy route retains dock, panels, gestures and releases canvas on
   const phone = (page.viewportSize()?.width || 0) <= 640;
   if (phone) await page.getByTestId('controls-toggle').click();
   await expect(page.getByTestId('status')).not.toHaveText(/loading|failed/i, { timeout: 30000 });
-  await expect(page.getByTestId(phone ? 'tier-low' : 'tier-ultra')).toHaveClass(/active/);
+  await expect(page.getByTestId(phone ? 'tier-low' : 'tier-mid')).toHaveClass(/active/);
   await expect(page.getByTestId('run-benchmarks')).toHaveText('Run benchmarks');
   if (!phone) {
     const panel = page.getByTestId('controls-panel');
