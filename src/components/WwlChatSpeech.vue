@@ -5,6 +5,7 @@ import { SpeechSession } from '../lib/speech/session.js';
 import { localEnglishVoices } from '../lib/speech/text.js';
 import { KOKORO_VOICES, getKokoroVoice } from '../lib/speech/voices.js';
 import { readChatPreferences, saveChatPreferences } from '../lib/chat-preferences.js';
+import { clampSpeechConcurrency } from '../lib/speech/scheduler.js';
 import { SPEECH_MODELS } from '../lib/speech/assets.js';
 
 const props = defineProps({
@@ -39,6 +40,10 @@ const voiceId = computed({
   get: () => settings.value.voiceId,
   set: (value) => setSetting('voiceId', value),
 });
+const voiceSessions = computed({
+  get: () => String(clampSpeechConcurrency(settings.value.voiceSessions)),
+  set: (value) => setSetting('voiceSessions', clampSpeechConcurrency(value)),
+});
 const selectedNeuralVoice = computed(() => getKokoroVoice(voiceId.value));
 const voiceGroups = ['American English', 'British English'].map((accent) => ({
   accent,
@@ -63,6 +68,12 @@ const session =
     },
     onTranscript: (text) => emit('transcript', text),
   });
+const neuralReady = computed(
+  () =>
+    state.value.kokoroReady &&
+    (!session.runtime.isVoiceLoaded || session.runtime.isVoiceLoaded(voiceId.value)) &&
+    session.runtime.kokoroPoolReady !== false,
+);
 watch(
   () => props.sessionState,
   (value) => {
@@ -77,6 +88,20 @@ function dispose() {
   session.dispose();
 }
 watch([provider, voiceId, voiceURI], () => session.cancel());
+watch(
+  () => clampSpeechConcurrency(settings.value.voiceSessions),
+  (count) => {
+    const pending = session.runtime.setKokoroSessions?.(count);
+    pending?.then?.(
+      () => {},
+      (error) => {
+        if (!error || error.name === 'AbortError') return;
+        session.update({ error: error.message || 'Could not load another voice model.' });
+      },
+    );
+  },
+  { immediate: true },
+);
 watch(
   () => props.disabled,
   (disabled) => {
@@ -200,28 +225,27 @@ defineExpose({
                 {{ SPEECH_MODELS.kokoro.downloadMB }} MB including voice data. Runs on this device.
                 Audio can take several seconds to prepare.
               </p>
+              <label
+                >Parallel voice models
+                <select v-model="voiceSessions" class="vd-select" :disabled="settingsDisabled">
+                  <option v-for="count in 8" :key="count" :value="String(count)">
+                    {{ count }}
+                  </option>
+                </select>
+              </label>
+              <p>
+                Each extra copy loads another voice model (about
+                {{ SPEECH_MODELS.kokoro.downloadMB }} MB). Choose 1 to keep a single model.
+              </p>
               <VdButton
                 size="sm"
                 variant="secondary"
-                :disabled="
-                  settingsDisabled ||
-                  busy ||
-                  (state.kokoroReady &&
-                    (!session.runtime.isVoiceLoaded || session.runtime.isVoiceLoaded(voiceId)))
-                "
+                :disabled="settingsDisabled || busy || neuralReady"
                 @click="session.load('kokoro', { voiceId })"
-                >{{
-                  state.kokoroReady &&
-                  (!session.runtime.isVoiceLoaded || session.runtime.isVoiceLoaded(voiceId))
-                    ? 'Neural voice ready'
-                    : 'Load Neural voice'
-                }}</VdButton
+                >{{ neuralReady ? 'Neural voice ready' : 'Load Neural voice' }}</VdButton
               >
               <VdButton
-                v-if="
-                  state.kokoroReady &&
-                  (!session.runtime.isVoiceLoaded || session.runtime.isVoiceLoaded(voiceId))
-                "
+                v-if="neuralReady"
                 size="sm"
                 variant="secondary"
                 :disabled="settingsDisabled || busy"
@@ -233,12 +257,7 @@ defineExpose({
                 "
                 >Test Neural voice</VdButton
               >
-              <p
-                v-if="
-                  state.kokoroReady &&
-                  (!session.runtime.isVoiceLoaded || session.runtime.isVoiceLoaded(voiceId))
-                "
-              >
+              <p v-if="neuralReady">
                 If playback finishes silently, check that the browser tab and this site's Sound
                 setting are not muted.
               </p>

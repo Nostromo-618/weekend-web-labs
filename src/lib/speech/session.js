@@ -1,5 +1,10 @@
 import { createSpeechRuntime } from './runtime.js';
 import { createRecorder, createPCMPlayer, speakSystem } from './audio.js';
+import {
+  scheduleSpeechSentences,
+  clampSpeechConcurrency,
+  DEFAULT_SPEECH_CONCURRENCY,
+} from './scheduler.js';
 import { speechText, splitSpeechText } from './text.js';
 
 /** Host state only; native engines, AudioContexts and workers stay outside Vue proxies. */
@@ -144,6 +149,7 @@ export class SpeechSession {
       signal: outerSignal,
       onPhase = () => {},
       throwOnError = false,
+      concurrency,
     } = {},
   ) {
     const text = speechText(answer);
@@ -151,6 +157,8 @@ export class SpeechSession {
       this.update({ error: 'This reply has no prose to read aloud.' });
       return;
     }
+    // A newer reply replaces audio that is still being spoken or synthesized.
+    if (this.state.status === 'speaking') this.cancel();
     const { epoch, signal } = this.begin('speaking');
     const cancel = () => this.cancel();
     outerSignal?.addEventListener('abort', cancel, { once: true });
@@ -166,42 +174,63 @@ export class SpeechSession {
       if (provider === 'neural' && !player) this.player = this.playerFactory(signal);
       const activePlayer = player || this.player;
       this.update({ playbackPhase: provider === 'neural' ? 'preparing' : 'playing' });
-      // Start the first sentence sooner; prepare only one following sentence
-      // during playback, keeping both latency and buffered audio bounded.
       const sentences = splitSpeechText(text, 300, { oneSentence: provider === 'neural' });
-      const prepare = (sentence) =>
-        this.runtime.synthesize(sentence, { signal, voiceId }).then(
-          (value) => ({ value }),
-          (error) => ({ error }),
-        );
-      let next = provider === 'neural' ? prepare(sentences[0]) : null;
-      for (let index = 0; index < sentences.length; index++) {
-        if (epoch !== this.epoch || signal.aborted) return;
-        if (provider === 'system') await this.systemSpeaker(sentences[index], voiceURI, signal);
-        else {
-          this.update({ playbackPhase: 'preparing' });
-          onPhase('preparing-audio');
-          const prepared = await next;
-          if (prepared.error) throw prepared.error;
-          const result = prepared.value;
+      if (provider === 'system') {
+        for (const sentence of sentences) {
           if (epoch !== this.epoch || signal.aborted) return;
-          if (!result?.chunks?.length)
-            throw new Error(
-              'Neural voice produced no audio. Reload the page and load Neural voice again.',
-            );
-          // Bound look-ahead to one chunk and synthesize it while current audio plays.
-          if (index + 1 < sentences.length) next = prepare(sentences[index + 1]);
-          for (const audio of result.chunks)
-            await activePlayer.play(audio, result.sampleRate, {
-              signal,
-              onStart: () => {
-                if (epoch === this.epoch) {
-                  this.update({ playbackPhase: 'playing' });
-                  onPhase('speaking');
-                }
-              },
-            });
+          await this.systemSpeaker(sentence, voiceURI, signal);
         }
+      } else {
+        // Start one sentence per live Kokoro session. Playback stays in order.
+        // The count is captured here so a later settings change applies to the
+        // next reply, not to audio already in flight.
+        onPhase('preparing-audio');
+        let sentenceError = null;
+        let playedAudio = 0;
+        const note = (error) => {
+          if (sentenceError || !error || error.name === 'AbortError') return;
+          sentenceError = error;
+          if (epoch === this.epoch) this.update({ error: error.message || 'Speech failed.' });
+        };
+        const sessions = clampSpeechConcurrency(
+          concurrency ?? this.runtime.kokoroSessionCount ?? DEFAULT_SPEECH_CONCURRENCY,
+        );
+        await scheduleSpeechSentences({
+          sentences,
+          concurrency: sessions,
+          signal,
+          synthesize: (sentence) => this.runtime.synthesize(sentence, { signal, voiceId }),
+          onSentence: async (_index, _sentence, outcome) => {
+            if (epoch !== this.epoch || signal.aborted)
+              throw new DOMException('Speech stopped.', 'AbortError');
+            if (!outcome.ok) {
+              if (outcome.error?.name === 'AbortError') throw outcome.error;
+              note(outcome.error);
+              return;
+            }
+            const result = outcome.value;
+            if (!result?.chunks?.length) {
+              note(
+                new Error(
+                  'Neural voice produced no audio. Reload the page and load Neural voice again.',
+                ),
+              );
+              return;
+            }
+            for (const audio of result.chunks)
+              await activePlayer.play(audio, result.sampleRate, {
+                signal,
+                onStart: () => {
+                  if (epoch === this.epoch) {
+                    this.update({ playbackPhase: 'playing' });
+                    onPhase('speaking');
+                  }
+                },
+              });
+            playedAudio += 1;
+          },
+        });
+        if (epoch === this.epoch && sentenceError && playedAudio === 0) throw sentenceError;
       }
       if (epoch === this.epoch) this.update({ status: 'idle', playbackPhase: '' });
     } catch (error) {

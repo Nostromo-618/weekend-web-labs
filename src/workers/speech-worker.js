@@ -130,6 +130,8 @@ async function synthesize(text, voiceId = 'af_heart') {
     const speed = new Tensor('float32', [1], [1]);
     let waveform;
     try {
+      // This worker owns one ONNX session. A second session.run on it throws
+      // "Session already started". Parallel copies are separate workers.
       ({ waveform } = await model({ input_ids, style, speed }));
       chunks.push(waveform.data.slice());
     } finally {
@@ -142,8 +144,10 @@ async function synthesize(text, voiceId = 'af_heart') {
   return { chunks, sampleRate: 24000 };
 }
 
-// One in-flight RPC per worker. Hard cancellation is owned by the host.
-self.onmessage = async ({ data: { id, method, args } }) => {
+// One chain per worker, because this module's ONNX session cannot overlap
+// inferences. The host puts each parallel copy in its own worker. Cancelling
+// a sentence drops its audio; terminating this worker is what releases the copy.
+async function dispatch({ data: { id, method, args } }) {
   const progress = (value) => self.postMessage({ id, type: 'progress', value });
   try {
     let value;
@@ -165,4 +169,13 @@ self.onmessage = async ({ data: { id, method, args } }) => {
   } catch (error) {
     self.postMessage({ id, type: 'error', value: { name: error.name, message: error.message } });
   }
+}
+let chain = Promise.resolve();
+self.onmessage = (event) => {
+  chain = chain
+    .then(() => dispatch(event))
+    .then(
+      () => {},
+      () => {},
+    );
 };

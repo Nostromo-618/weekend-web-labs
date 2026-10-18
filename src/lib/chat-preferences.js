@@ -1,10 +1,12 @@
 import { KOKORO_VOICES } from './speech/voices.js';
+import { clampSpeechConcurrency, DEFAULT_SPEECH_CONCURRENCY } from './speech/scheduler.js';
 const KEY = 'wwl-chat-settings-v1';
 const defaults = {
   delivery: 'checked-stream',
   provider: 'neural',
   voiceId: 'af_heart',
   voiceURI: '',
+  voiceSessions: DEFAULT_SPEECH_CONCURRENCY,
   flowchartOpen: true,
   flowchartRatio: 0.3,
   inspectorOpen: true,
@@ -28,6 +30,9 @@ export function readChatPreferences() {
     provider: value.provider === 'system' ? 'system' : defaults.provider,
     voiceId: KOKORO_VOICES.some((v) => v.id === value.voiceId) ? value.voiceId : defaults.voiceId,
     voiceURI: typeof value.voiceURI === 'string' ? value.voiceURI.slice(0, 1024) : '',
+    voiceSessions: clampSpeechConcurrency(
+      value.voiceSessions == null ? defaults.voiceSessions : value.voiceSessions,
+    ),
     flowchartOpen: value.flowchartOpen !== false,
     flowchartRatio: readRatio(value.flowchartRatio),
     inspectorOpen: value.inspectorOpen !== false,

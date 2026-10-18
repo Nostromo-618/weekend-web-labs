@@ -37,6 +37,14 @@ test('delivery and 28 named voices persist without starting downloads or capture
   const voices = page.getByLabel('English Kokoro voice');
   await expect(voices.locator('option')).toHaveCount(28);
   await voices.selectOption('bf_emma');
+  const copies = page.getByLabel('Parallel voice models');
+  await expect(copies).toHaveValue('2');
+  await expect(
+    page.getByText(
+      'Each extra copy loads another voice model (about 94 MB). Choose 1 to keep a single model.',
+    ),
+  ).toBeVisible();
+  await copies.selectOption('6');
   expect(await page.evaluate(() => window.speechQA.loads)).toEqual([]);
   expect(await page.evaluate(() => window.conversationQA.captures)).toBe(0);
   await page.reload();
@@ -48,6 +56,7 @@ test('delivery and 28 named voices persist without starting downloads or capture
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByLabel('Read-aloud voice')).toBeVisible();
   await expect(voices).toHaveValue('bf_emma');
+  await expect(page.getByLabel('Parallel voice models')).toHaveValue('6');
   await expect(page.getByRole('combobox', { name: 'Reply delivery', exact: true })).toHaveValue(
     'complete',
   );
@@ -163,10 +172,12 @@ test('pinned catalog rejects corrupt styles and runtime changes only the selecte
   });
   expect(result.count).toBe(28);
   expect(result.valid).toBe(true);
-  expect(result.workers).toBe(1);
+  expect(result.workers).toBe(2);
   expect(result.current).toBe(true);
   expect(result.calls).toEqual([
     ['load', 'af_heart'],
+    ['load', 'af_heart'],
+    ['loadVoice', 'bf_emma'],
     ['loadVoice', 'bf_emma'],
     ['synthesize', 'bf_emma'],
   ]);
