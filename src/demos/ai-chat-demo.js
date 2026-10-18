@@ -75,7 +75,7 @@ const DemoApp = {
                       'WebLLM (@mlc-ai/web-llm)',
                     ),
                   ]),
-                  ': Experimental Ministral 3 and Mistral 7B chat models. Qwen3 0.6B is not offered; tool integration for these models is pending.',
+                  ': Experimental Ministral 3 and Mistral 7B chat models for Chat and Compare (omitted from flowchart-interaction selection while Flowchart is open). Qwen3 0.6B is not offered.',
                 ]),
                 h('li', [
                   h('strong', [
@@ -168,9 +168,13 @@ style.textContent = `
   .demo-header > :last-child { grid-column: 2; grid-row: 1 / 3; align-self: start; }
   .demo-chat-wrap {
     padding: 0 0.75rem 1rem;
-    max-width: min(90rem, 100%);
+    max-width: min(90vw, 100%);
+    width: 90%;
     margin: 0 auto;
-    width: 100%;
+  }
+  .demo-chat-wrap:has(.wwl-flowchart-column) {
+    max-width: min(90vw, 100%);
+    width: 90%;
   }
   .demo-info-section {
     max-width: min(70rem, 100%);

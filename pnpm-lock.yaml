@@ -29,6 +29,9 @@ importers:
       '@vanduo-oss/vd3-charts':
         specifier: 1.1.1
         version: 1.1.1(vue@3.5.43)
+      '@vanduo-oss/vd3-flowchart':
+        specifier: 1.4.0
+        version: 1.4.0(vue@3.5.43)
       '@wwl/wwl-ai-chat':
         specifier: link:../wwl-ai-chat
         version: link:../wwl-ai-chat
@@ -501,6 +504,12 @@ packages:
 
   '@vanduo-oss/vd3-charts@1.1.1':
     resolution: {integrity: sha512-cU1XosHRYg1ePC2jrmQR2QGWZFFT2jDqEl3psvlqAU016azEFIeYy7Lu040GaM8+AD4QiC76YDK8aOeO4vSasA==}
+    engines: {node: '>=20.19.0', pnpm: '>=10'}
+    peerDependencies:
+      vue: '>=3.3.0'
+
+  '@vanduo-oss/vd3-flowchart@1.4.0':
+    resolution: {integrity: sha512-vES+n2y/zsw1eRXPxhWwQQ5asQzxbuNydpTr6BMxFaRt0ATqwilBgkrc7NjerjxEKKe4gRPArlL89exUTktNVg==}
     engines: {node: '>=20.19.0', pnpm: '>=10'}
     peerDependencies:
       vue: '>=3.3.0'
@@ -1403,6 +1412,10 @@ snapshots:
       undici-types: 8.3.0
 
   '@vanduo-oss/vd3-charts@1.1.1(vue@3.5.43)':
+    dependencies:
+      vue: 3.5.43
+
+  '@vanduo-oss/vd3-flowchart@1.4.0(vue@3.5.43)':
     dependencies:
       vue: 3.5.43
 

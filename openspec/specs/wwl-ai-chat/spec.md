@@ -55,7 +55,7 @@ The catalog MUST NOT offer Qwen3 0.6B, SmolLM2-360M, Qwen2.5-1.5B, or Llama-3.2-
 - **THEN** Qwen3 0.6B, SmolLM2-360M, Qwen2.5-1.5B, and Llama-3.2-3B are not present
 
 ### Requirement: Experimental Mistral choices stay optional
-The catalog MUST keep Gemma 4 E2B LiteRT as the default. It MAY offer four experimental choices: Ministral 3 3B Instruct WebLLM q4f16, Ministral 3 3B Reasoning WebLLM q4f16, text-only Ministral 3 3B Instruct ONNX q4, and Mistral 7B Instruct v0.3 WebLLM q4f16. Chat and documentation MUST be enabled for those choices. Tool execution MUST stay pending. WebLLM choices MUST require shader-f16 and use a 4096-token context. The ONNX choice MUST load the q4 decoder and fp16 token embeddings and MUST NOT download a vision encoder. Its context budget MUST follow the exported ONNX graph rather than the 256k model card. q4f32 twins, Mistral Small 4, and Ministral 8B/14B MUST NOT be offered. The reasoning WebLLM choice MUST remain a peer of LFM 2.5 and MUST NOT replace it.
+The catalog MUST keep Gemma 4 E2B LiteRT as the default. It MAY offer three experimental WebLLM choices: Ministral 3 3B Instruct q4f16, Ministral 3 3B Reasoning q4f16, and Mistral 7B Instruct v0.3 q4f16. Only Gemma 4 E2B and E4B execute tools and remain selectable when the Flowchart panel is open; the experimental WebLLM choices and LFM 2.5 MUST remain listed for Chat and Compare and MUST be omitted from flowchart-interaction selection. The Ministral 3 3B ONNX choice MUST NOT be offered. WebLLM choices MUST require shader-f16 and use a 4096-token context. q4f32 twins, Mistral Small 4, and Ministral 8B/14B MUST NOT be offered. The reasoning WebLLM choice MUST remain a peer of LFM 2.5 and MUST NOT replace it.
 
 #### Scenario: Default remains Gemma 4 E2B
 - **WHEN** a user opens Labs AI chat without choosing another model
@@ -63,15 +63,15 @@ The catalog MUST keep Gemma 4 E2B LiteRT as the default. It MAY offer four exper
 
 #### Scenario: Experimental choices are listed
 - **WHEN** the model picker lists catalog choices
-- **THEN** the four experimental Mistral choices are present, labeled experimental, and Gemma 4 E2B is still the default
+- **THEN** the three experimental WebLLM Mistral choices are present, labeled experimental, and Gemma 4 E2B is still the default
 
-#### Scenario: Qwen3 Tiny remains absent
+#### Scenario: Broken ONNX choice is absent
 - **WHEN** the model picker lists catalog choices
-- **THEN** Qwen3 0.6B is not present
+- **THEN** Ministral 3 3B Instruct ONNX is not present
 
-#### Scenario: ONNX text stack omits the vision encoder
-- **WHEN** the Ministral 3 Instruct ONNX choice is inspected
-- **THEN** its pinned files include the q4 merged decoder and fp16 token embeddings and do not include a vision encoder
+#### Scenario: Non-tool models are omitted when Flowchart is open
+- **WHEN** the Flowchart panel is open
+- **THEN** only tool-ready Gemma 4 models are selectable and LFM 2.5 / WebLLM Mistral choices are omitted from flowchart-interaction selection
 
 
 ### Requirement: AiChat engine comes from sibling Labs repo

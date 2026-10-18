@@ -19,8 +19,10 @@ const model = computed(() => getModelOption(props.modelId));
       >.
       {{
         model.capabilities?.tools
-          ? 'Available through the Gemma integration.'
-          : 'Integration pending; this build has not been certified for tools.'
+          ? model.toolCalling?.integration === 'xml'
+            ? 'Tools can edit the flowchart through the XML protocol.'
+            : 'Available through the Gemma integration.'
+          : 'This model can read the flowchart but cannot change it.'
       }}
     </p>
     <p>

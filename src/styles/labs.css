@@ -935,9 +935,19 @@ main[data-labs-route='about'] .labs-view-about .labs-section {
 }
 
 /* Chat's workspace needs width and a compact host; other demo cards keep their layout. */
+.labs-main.is-wide-demo,
+.labs-view-demos:has(.wwl-chat-detail) .vd-container-responsive {
+  max-width: min(90vw, 100%);
+  width: 90%;
+}
 .labs-demos-detail.wwl-chat-detail {
-  max-width: 90rem;
+  max-width: 100%;
+  width: 100%;
   padding: 0.75rem;
+}
+.labs-demos-detail.wwl-chat-detail:has(.wwl-flowchart-column) {
+  max-width: 100%;
+  width: 100%;
 }
 .wwl-chat-detail .labs-demos-detail-header {
   margin-bottom: 0.6rem;

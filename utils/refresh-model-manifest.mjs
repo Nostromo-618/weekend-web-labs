@@ -21,18 +21,6 @@ for (const model of MODEL_OPTIONS) {
     .filter(({ rfilename: file }) => {
       if (model.backend === 'litert') return file === model.modelFile;
       if (file.includes('vision_encoder')) return false;
-      if (model.backend === 'transformers' && model.transformersGraph === 'ministral3-text') {
-        return (
-          file === 'onnx/decoder_model_merged_q4.onnx' ||
-          file.startsWith('onnx/decoder_model_merged_q4.onnx_data') ||
-          file === 'onnx/embed_tokens_fp16.onnx' ||
-          file.startsWith('onnx/embed_tokens_fp16.onnx_data') ||
-          /^(config|generation_config|tokenizer|tokenizer_config|special_tokens_map)\.json$/.test(
-            file,
-          ) ||
-          file === 'chat_template.jinja'
-        );
-      }
       if (model.backend === 'transformers')
         return (
           file.startsWith(`onnx/model_${model.precision}.onnx`) ||

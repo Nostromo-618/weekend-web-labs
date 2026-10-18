@@ -89,6 +89,10 @@ test('Compare is lazy, keeps two pane statuses on mobile, and does not load mode
     fullPage: true,
   });
   await page.getByRole('button', { name: 'Chat', exact: true }).click();
+  const openSettingsButton = page.getByRole('button', { name: 'Open Settings' });
+  if (await openSettingsButton.isVisible()) {
+    await openSettingsButton.click();
+  }
   await expect(page.getByRole('button', { name: 'Load AI Model' })).toBeVisible();
   expect(modelDownloads).toEqual([]);
 });
@@ -157,6 +161,10 @@ test('search works offline after index load with denied storage and no model dow
 test('missing WebGPU is explained before any download', async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'gpu', { value: undefined }));
   await page.goto('/demo/ai-chat-demo.html');
+  const openSettings = page.getByRole('button', { name: 'Open Settings' });
+  if (await openSettings.isVisible()) {
+    await openSettings.click();
+  }
   await expect(
     page.getByRole('button', { name: /Load AI Model|Runtime unsupported/ }),
   ).toBeDisabled();

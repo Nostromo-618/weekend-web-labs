@@ -1,7 +1,6 @@
 import {
   AutoTokenizer,
   AutoModelForCausalLM,
-  Ministral3ForCausalLM,
   TextStreamer,
   InterruptableStoppingCriteria,
   env,
@@ -68,10 +67,6 @@ self.onmessage = async ({ data: { id, method, args } }) => {
           ? {}
           : { use_external_data_format: plan.useExternalDataFormat }),
         progress_callback: (progress) => {
-          const file = String(progress.file || '');
-          if (plan.modelClass === 'Ministral3ForCausalLM' && file.includes('vision_encoder')) {
-            throw new Error('Text-only Ministral load must not fetch the vision encoder.');
-          }
           send(id, 'progress', {
             stage: progress.status === 'ready' ? 'compiling' : 'downloading',
             text: progress.file || progress.status,
@@ -80,8 +75,6 @@ self.onmessage = async ({ data: { id, method, args } }) => {
           });
         },
       };
-      const modelClass =
-        plan.modelClass === 'Ministral3ForCausalLM' ? Ministral3ForCausalLM : AutoModelForCausalLM;
       send(id, 'progress', {
         stage: 'downloading',
         text: 'Loading model tokenizer…',
@@ -95,7 +88,7 @@ self.onmessage = async ({ data: { id, method, args } }) => {
         loaded: 0,
         source: args.source ? 'local' : 'runtime-managed',
       });
-      model = await modelClass.from_pretrained(source, settings);
+      model = await AutoModelForCausalLM.from_pretrained(source, settings);
       result = true;
     } else if (method === 'countTokens') {
       result = tokenizer.encode(template(args.messages)).length;

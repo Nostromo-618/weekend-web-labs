@@ -250,6 +250,10 @@ test('both real demo hosts keep a lazy workspace with documentation below', asyn
     if (await page.getByTestId('disclaimer-gate').isVisible())
       await page.getByTestId('disclaimer-accept').click();
     await expect(page.locator('.wwl-ai-chat-wrap')).toBeVisible();
+    const flowchartToggle = page.getByRole('button', { name: 'Flowchart', exact: true });
+    if ((await flowchartToggle.count()) > 0 && (await flowchartToggle.getAttribute('aria-pressed')) === 'true') {
+      await flowchartToggle.click();
+    }
     await expect(panel(page)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Open Settings', exact: true })).toHaveCount(0);
     await expect(

@@ -26,6 +26,14 @@ import {
   getModelDisplayName,
   getModelOption,
   shouldFocusChatComposer,
+  SET_FLOWCHART_DOCUMENT,
+  FLOWCHART_DRAW_FOLLOW_UP,
+  FLOWCHART_TOOL_DESCRIPTION,
+  FLOWCHART_TOOL_PARAMETERS,
+  prepareFlowchartDocument,
+  flowchartDrawNeedsFollowUp,
+  validateFlowchartDocument,
+  visionImagesForModel,
 } from '@wwl/wwl-ai-chat';
 import { validateLlmInput } from '@wwl/wwl-ai-chat/guardrails/llm';
 import { toGuardrailError } from '@wwl/wwl-ai-chat';
@@ -38,7 +46,10 @@ const props = defineProps({
   chat: { type: Object, default: null },
   speechOptions: { type: Object, default: null },
   conversationOptions: { type: Object, default: null },
+  flowchartDocument: { type: Object, default: null },
+  captureFlowchart: { type: Function, default: null },
 });
+const emit = defineEmits(['model-change', 'flowchart-document', 'flowchart-rejected']);
 
 /**
  * Inference engines (LiteRT / WebLLM WASM) must not live inside Vue reactivity
@@ -53,6 +64,32 @@ const delivery = computed({
   get: () => preferences.value.delivery,
   set: (value) => updatePreferences({ delivery: value }),
 });
+const flowchartTools = computed(() => !!getModelOption(selectedModelId.value)?.capabilities?.tools);
+function syncFlowchartTools() {
+  if (!chat || streaming.value || typeof chat.registerTools !== 'function') return;
+  if (!flowchartTools.value) {
+    chat.registerTools([]);
+    return;
+  }
+  chat.registerTools([
+    {
+      name: SET_FLOWCHART_DOCUMENT,
+      description: FLOWCHART_TOOL_DESCRIPTION,
+      parameters: FLOWCHART_TOOL_PARAMETERS,
+    },
+  ]);
+}
+async function executeFlowchartTool(name, args) {
+  if (name !== SET_FLOWCHART_DOCUMENT) return { error: 'tool.name.not_allowed' };
+  const prepared = prepareFlowchartDocument(args?.document);
+  const check = validateFlowchartDocument(prepared);
+  if (!check.allowed) {
+    emit('flowchart-rejected', check.message);
+    return { error: check.code, message: check.message };
+  }
+  emit('flowchart-document', prepared);
+  return { ok: true };
+}
 function updatePreferences(patch) {
   preferences.value = { ...preferences.value, ...patch };
   saveChatPreferences(patch);
@@ -207,7 +244,9 @@ const deviceSummary = computed(() => {
 const groupedModels = computed(() =>
   MODEL_GROUPS.map((group) => ({
     ...group,
-    models: PRIMARY_MODEL_OPTIONS.filter((m) => m.group === group.id).map((model) => {
+    models: PRIMARY_MODEL_OPTIONS.filter(
+      (m) => m.group === group.id && (!props.flowchartDocument || m.capabilities?.tools),
+    ).map((model) => {
       const resolved = resolveModelForSystem(model.id);
       return {
         ...model,
@@ -359,6 +398,9 @@ function applySelection(modelId) {
     errorBanner.value = 'This model is no longer supported. Choose a retained model and load it.';
     modelId = MODEL_OPTIONS[0].id;
     loaded.value = false;
+  } else if (props.flowchartDocument && !getModelOption(modelId)?.capabilities?.tools) {
+    modelId = MODEL_OPTIONS[0].id;
+    loaded.value = false;
   }
   selectedModelId.value = modelId;
   const resolved = resolveModelForSystem(modelId);
@@ -373,6 +415,8 @@ function applySelection(modelId) {
       ? 'This model looks cached in your browser — reload should skip a full download.'
       : 'First load downloads model weights into browser cache.';
   refreshCapacityNote(modelId);
+  emit('model-change', selectedModelId.value);
+  syncFlowchartTools();
   if (!loaded.value && chat && !resolved.loadBlocked && !resolved.unavailable) {
     void chat.setModelId(resolved.modelId).catch(() => {
       /* ignore while loading */
@@ -668,7 +712,11 @@ async function sendMessage() {
 }
 async function submitTurn(
   text,
-  { signal: outerSignal, maxOutputTokens = 768, voice = false } = {},
+  {
+    signal: outerSignal,
+    maxOutputTokens = flowchartTools.value && props.flowchartDocument ? 1536 : 768,
+    voice = false,
+  } = {},
 ) {
   if (!chat || !loaded.value || streaming.value)
     throw new Error('Chat is not ready for another turn.');
@@ -700,9 +748,17 @@ async function submitTurn(
   await scrollToLatest(true);
   if (!voice) await focusComposer({ force: true });
   try {
-    const reply = await chat.generate(text, {
+    let images = [];
+    if (getModelOption(selectedModelId.value)?.capabilities?.vision && props.captureFlowchart) {
+      images = visionImagesForModel(getModelOption(selectedModelId.value), [
+        { dataUrl: await props.captureFlowchart() },
+      ]);
+    }
+    const turnOptions = {
       signal: controller.signal,
       maxOutputTokens,
+      flowchartDocument: props.flowchartDocument,
+      images,
       delivery: voice ? 'complete' : delivery.value,
       onPreview: (text) => {
         if (current() && !controller.signal.aborted) {
@@ -736,7 +792,37 @@ async function submitTurn(
       onFinish: (usage) => {
         if (current()) tokenCount.value = usage?.total_tokens ?? null;
       },
-    });
+    };
+    const toolsReady = flowchartTools.value && typeof chat.generateWithTools === 'function';
+    let diagramApplied = false;
+    const execute = async (name, args) => {
+      const result = await executeFlowchartTool(name, args);
+      if (result?.ok) diagramApplied = true;
+      return result;
+    };
+    let reply = toolsReady
+      ? await chat.generateWithTools(text, {
+          ...turnOptions,
+          execute,
+        })
+      : await chat.generate(text, turnOptions);
+    if (
+      current() &&
+      !controller.signal.aborted &&
+      toolsReady &&
+      !diagramApplied &&
+      flowchartDrawNeedsFollowUp(text, props.flowchartDocument, props.flowchartDocument)
+    ) {
+      try {
+        const follow = await chat.generateWithTools(FLOWCHART_DRAW_FOLLOW_UP, {
+          ...turnOptions,
+          execute,
+        });
+        if (current() && !controller.signal.aborted) reply = follow;
+      } catch (err) {
+        if (err?.name === 'AbortError') throw err;
+      }
+    }
     if (!current() || controller.signal.aborted) throw new DOMException('Stopped', 'AbortError');
     const answer = reply;
     messages.value[assistantIdx] = { role: 'assistant', content: answer, speechReady: true };
@@ -815,6 +901,8 @@ onMounted(async () => {
   }
 
   selectedModelId.value = chat.modelId || MODEL_OPTIONS[0].id;
+  emit('model-change', selectedModelId.value);
+  syncFlowchartTools();
   systemInfo.value = await detectSystemInfo();
   if (!alive) return;
   applySelection(selectedModelId.value);
@@ -877,6 +965,17 @@ watch(
   () => props.chat,
   (next) => {
     if (next) chat = next;
+  },
+);
+
+watch(
+  () => props.flowchartDocument,
+  (doc) => {
+    if (doc && !getModelOption(selectedModelId.value)?.capabilities?.tools) {
+      applySelection(MODEL_OPTIONS[0].id);
+    } else {
+      syncFlowchartTools();
+    }
   },
 );
 

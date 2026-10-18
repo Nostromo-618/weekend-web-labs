@@ -56,6 +56,7 @@
     "@mlc-ai/web-llm": "0.2.86",
     "@vanduo-oss/vd3": "1.8.0",
     "@vanduo-oss/vd3-charts": "1.1.1",
+    "@vanduo-oss/vd3-flowchart": "1.4.0",
     "@wwl/wwl-ai-chat": "link:../wwl-ai-chat",
     "@wwl/wwl-cbun": "link:../wwl-cbun",
     "@wwl/wwl-hex-earth": "link:../wwl-hex-earth",

@@ -11,21 +11,20 @@ On-device browser chat with LiteRT 0.17.1, WebLLM 0.2.86 and Transformers.js 4.3
 
 ## Models and compatibility
 
-Chat and Compare share seven primary choices grouped by family. Gemma 4 E2B remains the default. A separate precision control exposes the LFM compatibility variant; selecting a model never starts a download. Labels include engine, download size, candidate status and tool capability.
+Chat and Compare share six primary choices grouped by family. Gemma 4 E2B remains the default. A separate precision control exposes the LFM compatibility variant; selecting a model never starts a download. Labels include engine, download size, candidate status and tool capability.
 
-| Primary choice                  | Engine                        | Role                                                     | Tools                                         |
-| ------------------------------- | ----------------------------- | -------------------------------------------------------- | --------------------------------------------- |
-| Gemma 4 E2B                     | LiteRT                        | Default, about 2.0 GB                                    | Native execution available                    |
-| Gemma 4 E4B                     | LiteRT                        | Quality, about 3.0 GB                                    | Native execution available                    |
-| LFM2.5 2.6B                     | Transformers.js → ONNX WebGPU | Reasoning candidate, about 1.55 GB                       | Documented model support; integration pending |
-| Ministral 3 3B Instruct         | WebLLM                        | Experimental, about 1.9 GB, 4096-token context           | Documented model support; integration pending |
-| Ministral 3 3B Reasoning        | WebLLM                        | Experimental reasoning peer beside LFM, about 1.9 GB     | Documented model support; integration pending |
-| Ministral 3 3B Instruct ONNX    | Transformers.js → ONNX WebGPU | Experimental text-only q4, about 3.1 GB                  | Documented model support; integration pending |
-| Mistral 7B Instruct v0.3        | WebLLM                        | Experimental, about 4.1 GB, 4096-token context           | Documented model support; integration pending |
+| Primary choice           | Engine                        | Role                                                 | Tools                                         |
+| ------------------------ | ----------------------------- | ---------------------------------------------------- | --------------------------------------------- |
+| Gemma 4 E2B              | LiteRT                        | Default, about 2.0 GB                                | Native execution available                    |
+| Gemma 4 E4B              | LiteRT                        | Quality, about 3.0 GB                                | Native execution available                    |
+| LFM2.5 2.6B              | Transformers.js → ONNX WebGPU | Reasoning candidate, about 1.55 GB                   | Documented model support; integration pending |
+| Ministral 3 3B Instruct  | WebLLM                        | Experimental, about 1.9 GB, 4096-token context       | Documented model support; integration pending |
+| Ministral 3 3B Reasoning | WebLLM                        | Experimental reasoning peer beside LFM, about 1.9 GB | Documented model support; integration pending |
+| Mistral 7B Instruct v0.3 | WebLLM                        | Experimental, about 4.1 GB, 4096-token context       | Documented model support; integration pending |
 
-LFM 2.6B Q4 remains an explicit precision variant. Qwen3 0.6B is not offered. The Ministral ONNX choice loads `decoder_model_merged_q4` and `embed_tokens_fp16` only; it does not download the vision encoder, and its catalog budget is the exported 16,384-token RoPE base rather than the 256k model card. WebLLM choices require shader-f16. Missing WebGPU disables loading; shader-f16 compatibility is checked before load. Retired selections display an explanation and offer the default without silently downloading it. LiteRT, WebLLM and Transformers.js retain worker/runtime isolation. Retired spikes, Gemma MLC peers, Qwen3 Tiny, LFM 230M/350M, q4f32 twins, Mistral Small 4, and Ministral 8B/14B are not offered. Existing downloaded models, chats and historical reports remain intact.
+LFM 2.6B Q4 remains an explicit precision variant and cannot edit the flowchart. While the Flowchart panel is open, only tool-ready Gemma 4 models (E2B and E4B) are offered in the model picker. Qwen3 0.6B and the Ministral 3 3B ONNX build are not offered. WebLLM choices require shader-f16. Missing WebGPU disables loading; shader-f16 compatibility is checked before load. Retired selections display an explanation and offer the default without silently downloading it. LiteRT, WebLLM and Transformers.js retain worker/runtime isolation. Retired spikes, Gemma MLC peers, Qwen3 Tiny, LFM 230M/350M, q4f32 twins, Mistral Small 4, and Ministral 8B/14B are not offered. Existing downloaded models, chats and historical reports remain intact.
 
-Official model-level tool support is recorded with [Gemma](https://deepmind.google/models/gemma/gemma-4/) and Liquid's [2.6B](https://huggingface.co/LiquidAI/LFM2.5-2.6B#tool-use) cards in the catalog. It does not certify our quantized builds or enable adapters. Only Gemma's integration currently executes tools. Candidate labels remain until fresh validation supports promotion.
+Official model-level tool support is recorded with [Gemma](https://deepmind.google/models/gemma/gemma-4/), [Ministral 3](https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512), [Mistral 7B](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3) and Liquid's [2.6B](https://huggingface.co/LiquidAI/LFM2.5-2.6B#tool-use) cards in the catalog. It does not certify our quantized builds. Gemma executes native tools; the three WebLLM Mistral choices and LFM remain integration-pending and are omitted from flowchart-interaction selection.
 
 Device and storage details are expandable. Browser-reported memory is approximate and does not establish GPU capacity. See [model and guardrail validation](./wwl-model-guardrails-validation.md) for measured browser/model limitations; phone layout emulation does not establish physical phone inference support.
 
@@ -106,7 +105,7 @@ await chat.dispose();
 
 The package default remains `complete`; Labs opts into checked previews according to the remembered preference. Render previews as escaped plain text, and never persist, export or speak them. Existing callback signatures remain supported; `onUpdate` and the returned reply carry final checked content only. Optional structured `onGuardrail` events omit raw rejected content. The workspace package README documents typed options, source context, token accounting and JSON Schema support.
 
-Native LiteRT tools are allowlisted and validated before execution. Rounds, calls, execution time, and result size are bounded; native calls receive native tool-response messages. XML requires an explicit compatibility setting. Tool handlers receive an AbortSignal and should cooperate with cancellation. LFM tool execution remains integration-pending. Arguments are checked before execution and results before model ingestion or callbacks; rejected results become fixed errors.
+Native LiteRT tools are allowlisted and validated before execution. Rounds, calls, execution time, and result size are bounded; native calls receive native tool-response messages. An explicit `toolProtocol: 'xml'` host option remains available in `AiChat` for custom XML tool loops, while the WebLLM Mistral and LFM catalog choices remain integration-pending and are omitted from flowchart-interaction selection when the Flowchart panel is open. Tool handlers receive an AbortSignal and should cooperate with cancellation. Arguments are checked before execution and results before model ingestion or callbacks; rejected results become fixed errors. A rejected `set_flowchart_document` call leaves the canvas unchanged. The flowchart JSON is quoted data on every turn. A local screenshot is attached only when the loaded model declares vision; none of the current catalog models do.
 
 ## Local development and storage
 

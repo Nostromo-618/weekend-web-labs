@@ -405,7 +405,10 @@ watch(demoSlug, (slug) => {
         :aria-hidden="route === 'demos' ? 'false' : 'true'"
         :inert="route !== 'demos'"
       >
-        <div class="vd-container-responsive labs-main">
+        <div
+          class="vd-container-responsive labs-main"
+          :class="{ 'is-wide-demo': demoSlug === 'aichat' }"
+        >
           <section id="labs-demos" class="labs-section" aria-labelledby="labs-demos-heading">
             <div class="labs-page-header about-header">
               <h2 id="labs-demos-heading"><i class="ph ph-flask" aria-hidden="true"></i> Demos</h2>
