@@ -285,7 +285,9 @@ test('one click preserves history/draft, automatically submits consecutive turns
   );
   await page.getByRole('button', { name: 'End conversation', exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Message', exact: true })).toBeEditable();
-  expect(await page.evaluate(() => window.chatQA.instructions)).toEqual({});
+  expect(await page.evaluate(() => window.chatQA.instructions)).toEqual({
+    flowchartCanvas: 'off',
+  });
   expect(await page.locator('.wwl-ai-message').count()).toBe(4);
 });
 

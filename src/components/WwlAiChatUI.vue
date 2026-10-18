@@ -38,6 +38,7 @@ import {
 import { validateLlmInput } from '@wwl/wwl-ai-chat/guardrails/llm';
 import { toGuardrailError } from '@wwl/wwl-ai-chat';
 import { chatRuntimeOptions, clearChatCaches } from '../lib/chat-runtime.js';
+import { shouldRegisterFlowchartTool } from '../lib/flowchart-chat-mode.js';
 import { labsMarkdownToHtml } from '@wwl/wwl-ai-chat/markdown';
 
 const MODEL_CACHE_FLAG_PREFIX = 'wwl-ai-chat-model-cached:';
@@ -64,20 +65,31 @@ const delivery = computed({
   get: () => preferences.value.delivery,
   set: (value) => updatePreferences({ delivery: value }),
 });
+const SPOKEN_EXTRA_RULES =
+  'For this spoken conversation, answer in 1–3 short conversational sentences. Use natural spoken English, avoid unnecessary lists and markdown, and keep the reply concise.';
 const flowchartTools = computed(() => !!getModelOption(selectedModelId.value)?.capabilities?.tools);
+function applyChatInstructions() {
+  if (!chat || streaming.value || typeof chat.setSystemPromptOptions !== 'function') return;
+  const options = {
+    flowchartCanvas: props.flowchartDocument != null ? 'on' : 'off',
+  };
+  if (conversationInstructionsActive) options.extraRules = SPOKEN_EXTRA_RULES;
+  chat.setSystemPromptOptions(options);
+}
 function syncFlowchartTools() {
   if (!chat || streaming.value || typeof chat.registerTools !== 'function') return;
-  if (!flowchartTools.value) {
+  if (!shouldRegisterFlowchartTool(flowchartTools.value, props.flowchartDocument)) {
     chat.registerTools([]);
-    return;
+  } else {
+    chat.registerTools([
+      {
+        name: SET_FLOWCHART_DOCUMENT,
+        description: FLOWCHART_TOOL_DESCRIPTION,
+        parameters: FLOWCHART_TOOL_PARAMETERS,
+      },
+    ]);
   }
-  chat.registerTools([
-    {
-      name: SET_FLOWCHART_DOCUMENT,
-      description: FLOWCHART_TOOL_DESCRIPTION,
-      parameters: FLOWCHART_TOOL_PARAMETERS,
-    },
-  ]);
+  applyChatInstructions();
 }
 async function executeFlowchartTool(name, args) {
   if (name !== SET_FLOWCHART_DOCUMENT) return { error: 'tool.name.not_allowed' };
@@ -574,11 +586,8 @@ async function ensureConversationChat({ signal, onProgress, settings }) {
   const history = chat.getHistory?.() || savedHistory;
   savedHistory = history;
   if (!conversationInstructionsActive) {
-    chat.setSystemPromptOptions?.({
-      extraRules:
-        'For this spoken conversation, answer in 1–3 short conversational sentences. Use natural spoken English, avoid unnecessary lists and markdown, and keep the reply concise.',
-    });
     conversationInstructionsActive = true;
+    applyChatInstructions();
   }
   if (!loaded.value || chat.modelId !== settings.modelId) {
     selectedModelId.value = settings.modelId;
@@ -615,8 +624,8 @@ function startConversation(reviewedText = null) {
       chat?.cancel?.();
     },
     restoreInstructions: () => {
-      chat?.setSystemPromptOptions?.({});
       conversationInstructionsActive = false;
+      applyChatInstructions();
     },
     ...(props.conversationOptions || {}),
     onChange: (state) => {
@@ -708,7 +717,7 @@ async function submitTurn(
   text,
   {
     signal: outerSignal,
-    maxOutputTokens = flowchartTools.value && props.flowchartDocument ? 1536 : 768,
+    maxOutputTokens = props.flowchartDocument != null && flowchartTools.value ? 1536 : 768,
     voice = false,
   } = {},
 ) {
@@ -743,7 +752,11 @@ async function submitTurn(
   if (!voice) await focusComposer({ force: true });
   try {
     let images = [];
-    if (getModelOption(selectedModelId.value)?.capabilities?.vision && props.captureFlowchart) {
+    if (
+      props.flowchartDocument &&
+      getModelOption(selectedModelId.value)?.capabilities?.vision &&
+      props.captureFlowchart
+    ) {
       images = visionImagesForModel(getModelOption(selectedModelId.value), [
         { dataUrl: await props.captureFlowchart() },
       ]);
@@ -787,7 +800,10 @@ async function submitTurn(
         if (current()) tokenCount.value = usage?.total_tokens ?? null;
       },
     };
-    const toolsReady = flowchartTools.value && typeof chat.generateWithTools === 'function';
+    const toolsReady =
+      props.flowchartDocument != null &&
+      flowchartTools.value &&
+      typeof chat.generateWithTools === 'function';
     let diagramApplied = false;
     const execute = async (name, args) => {
       const result = await executeFlowchartTool(name, args);
