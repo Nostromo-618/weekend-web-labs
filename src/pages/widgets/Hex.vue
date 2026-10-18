@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import DocCodeSnippet from '../../components/DocCodeSnippet.vue';
 import { VdHexGrid } from '@wwl/wwl-cbun/hex-grid';
 import { TerrainType, getAdjacentHexes, hexDistance } from '@wwl/wwl-cbun/hex-grid/hex-math';
@@ -48,12 +48,7 @@ const PATH_FILL = 'rgba(255, 159, 28, 0.5)';
 const PATH_ACCENT = '#ff9f1c';
 const DEMO_CELL_FILL = 'transparent';
 
-const hexThemeKey = computed(() => {
-  if (typeof document === 'undefined') return 'light:green';
-  const theme = document.documentElement.getAttribute('data-theme') || 'light';
-  const primary = document.documentElement.getAttribute('data-primary-color') || 'green';
-  return `${theme}:${primary}`;
-});
+let themeObserver = null;
 
 function readToken(token, fallback) {
   if (typeof document === 'undefined') return fallback;
@@ -108,9 +103,10 @@ function applyDemoOutlineStyle() {
   if (!gridInstance) return;
   const stroke = demoCellStroke();
   for (const hex of gridInstance.getAllHexes()) {
-    if (hex.terrain) continue;
-    hex.fill = DEMO_CELL_FILL;
     hex.stroke = stroke;
+    if (hex.terrain) continue;
+    const key = `${hex.q},${hex.r}`;
+    hex.fill = pathKeyIndex.has(key) ? PATH_FILL : DEMO_CELL_FILL;
   }
   requestRender();
 }
@@ -231,6 +227,10 @@ function onSelect(hex) {
 }
 
 function resetGrid() {
+  clearPathHighlight();
+  if (gridInstance) {
+    for (const hex of gridInstance.getAllHexes()) hex.terrain = null;
+  }
   size.value = DEFAULT_SIZE;
   width.value = DEFAULT_WIDTH;
   height.value = DEFAULT_HEIGHT;
@@ -238,7 +238,7 @@ function resetGrid() {
   gridInstance?.resetView();
   zoomPercent.value = 100;
   showInfo.value = false;
-  clearPathHighlight();
+  terrainName.value = null;
   applyDemoOutlineStyle();
 }
 
@@ -262,6 +262,27 @@ watch(pathMode, (on) => {
     pathNoRoute.value = false;
     clearPathHighlight();
   }
+});
+
+// Geometry rebuilds stamp theme fills onto brand-new cells. Re-apply the
+// wireframe after the grid has regenerated, without touching painted terrain.
+watch([size, width, height, rotationDeg], () => {
+  nextTick(() => applyDemoOutlineStyle());
+});
+
+onMounted(() => {
+  if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') return;
+  themeObserver = new MutationObserver(() => applyDemoOutlineStyle());
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme', 'data-primary'],
+  });
+});
+
+onUnmounted(() => {
+  themeObserver?.disconnect();
+  themeObserver = null;
+  gridInstance = null;
 });
 
 const mathTargetQ = ref(2);
@@ -294,7 +315,6 @@ import { VdHexGrid } from '@wwl/wwl-cbun/hex-grid';
         <div class="vd-card demo-card" style="padding: 1rem">
           <div class="hex-demo-container">
             <VdHexGrid
-              :key="hexThemeKey"
               data-testid="labs-widget-hex"
               :size="size"
               :width="width"
@@ -324,7 +344,7 @@ import { VdHexGrid } from '@wwl/wwl-cbun/hex-grid';
               >
                 −
               </button>
-              <span class="vd-text-sm">{{ zoomPercent }}%</span>
+              <span class="vd-text-sm canvas-toolbar-zoom">{{ zoomPercent }}%</span>
               <button
                 type="button"
                 class="vd-btn vd-btn-sm vd-btn-outline"
@@ -469,5 +489,19 @@ import { VdHexGrid } from '@wwl/wwl-cbun/hex-grid';
   border-radius: var(--vd-card-border-radius, var(--card-border-radius));
   overflow: hidden;
   clip-path: inset(0 round var(--vd-card-border-radius, var(--card-border-radius, 0.5rem)));
+}
+
+.canvas-toolbar {
+  align-items: center;
+}
+
+.canvas-toolbar-zoom {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  white-space: nowrap;
+  /* Match .vd-btn's margin-bottom so flex centering lines up with the button border box. */
+  margin-bottom: 0.5rem;
 }
 </style>

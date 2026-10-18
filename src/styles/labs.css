@@ -335,6 +335,47 @@ body:has(main[data-labs-route]) {
   min-height: calc(100vh - 80px);
 }
 
+/* Title + subtitle share one centered, shrink-wrapped lockup.
+   Column 2 is the wordmark, so the subtitle starts under "weekend". */
+.hero-lockup {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 0.2em;
+  row-gap: 0.2em;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  text-align: left;
+  font-size: var(--vd-font-size-3xl);
+  color: var(--color-primary);
+}
+
+.hero-lockup > .hero-title {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: center;
+  margin: 0;
+}
+
+.hero-lockup .hero-atom-icon {
+  margin-right: 0;
+}
+
+.hero-subtitle {
+  grid-column: 2;
+  justify-self: start;
+  margin: 0;
+  padding: 0;
+  font-family: 'Zen Dots', sans-serif;
+  font-size: 0.67em;
+  font-weight: var(--vd-font-weight-bold, 700);
+  line-height: var(--vd-line-height-tight, 1.25);
+  text-transform: lowercase;
+  text-align: left;
+  color: var(--color-primary);
+}
+
 .labs-main {
   padding-bottom: 4rem;
 }
@@ -914,16 +955,35 @@ main[data-labs-route='about'] .labs-view-about .labs-section {
 }
 
 @media (max-width: 600px) {
+  .hero-lockup {
+    grid-template-columns: max-content;
+    justify-items: start;
+  }
+
   .hero-title {
+    display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
+    grid-column: 1;
+    justify-self: start;
+    width: max-content;
     line-height: 1;
+  }
+
+  .hero-title-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .hero-title svg {
     transform: none !important;
     margin-right: 0 !important;
     margin-bottom: 0.25em;
+  }
+
+  .hero-subtitle {
+    grid-column: 1;
   }
 
   /* Slightly subordinate “web labs”; negative margin collapses the &nbsp; flex gap. */

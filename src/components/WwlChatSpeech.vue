@@ -158,7 +158,7 @@ defineExpose({
         @click="session.cancel()"
         >Cancel speech</VdButton
       >
-      <Teleport :to="settingsTarget || 'body'" :disabled="!settingsTarget">
+      <Teleport v-if="settingsTarget" :to="settingsTarget">
         <details open>
           <summary>Voice settings</summary>
           <div class="wwl-chat-speech-settings">

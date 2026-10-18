@@ -85,8 +85,9 @@ test('split unsafe output never reaches DOM, saved history or speech', async ({ 
   await expect(page.getByLabel('Read-aloud voice')).toBeVisible();
   await page.getByLabel('Read-aloud voice').selectOption('neural');
   await page.getByRole('button', { name: 'Load Neural voice', exact: true }).click();
-  if ((await settings.getAttribute('aria-expanded')) === 'true')
-    await page.getByRole('button', { name: 'Close settings', exact: true }).click();
+  const settingsDialog = page.getByRole('dialog', { name: 'Settings', exact: true });
+  if (await settingsDialog.isVisible())
+    await settingsDialog.getByRole('button', { name: 'Close', exact: true }).click();
   await page.getByRole('button', { name: 'Read aloud', exact: true }).click();
   await expect.poll(() => page.evaluate(() => window['speechQA'].spoken.length)).toBeGreaterThan(0);
   const spoken = await page.evaluate(() => window['speechQA'].spoken.join(' '));
@@ -116,9 +117,9 @@ test('chat demo shows the flowchart canvas beside chat and omits non-tool models
       .locator('option')
       .evaluateAll((els) => els.map((el) => (el as HTMLOptionElement).value)),
   ).toEqual(['gemma-4-E2B-it-web', 'gemma-4-E4B-it-web']);
-  if ((await page.locator('.wwl-ai-settings-panel').getAttribute('aria-modal')) === 'true') {
-    await page.getByRole('button', { name: 'Close settings', exact: true }).click();
-  }
+  const settingsDialog = page.getByRole('dialog', { name: 'Settings', exact: true });
+  if (await settingsDialog.isVisible())
+    await settingsDialog.getByRole('button', { name: 'Close', exact: true }).click();
   const wide = (page.viewportSize()?.width || 0) > 900;
   if (wide) {
     await expect(splitter).toBeVisible();
@@ -156,9 +157,9 @@ test('chat demo shows the flowchart canvas beside chat and omits non-tool models
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   if ((await settings.getAttribute('aria-expanded')) === 'false') await settings.click();
   await expect(picker.locator('option')).toHaveCount(primary.length);
-  if ((await page.locator('.wwl-ai-settings-panel').getAttribute('aria-modal')) === 'true') {
-    await page.getByRole('button', { name: 'Close settings', exact: true }).click();
-  }
+  const openSettings = page.getByRole('dialog', { name: 'Settings', exact: true });
+  if (await openSettings.isVisible())
+    await openSettings.getByRole('button', { name: 'Close', exact: true }).click();
   await toggle.click();
   await expect(canvas).toBeVisible();
 });

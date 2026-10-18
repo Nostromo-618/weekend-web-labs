@@ -91,8 +91,9 @@ test('paused model and voice edits preserve draft/history and reasoning uses the
   await model.selectOption('LFM2.5-2.6B-q4f16-ONNX');
   await expect(page.getByLabel('Read-aloud voice')).toBeVisible();
   await page.getByLabel('English Kokoro voice').selectOption('bf_emma');
-  if ((await page.locator('.wwl-ai-settings-panel').getAttribute('aria-modal')) === 'true')
-    await page.getByRole('button', { name: 'Close settings', exact: true }).click();
+  const settingsDialog = page.getByRole('dialog', { name: 'Settings', exact: true });
+  if (await settingsDialog.isVisible())
+    await settingsDialog.getByRole('button', { name: 'Close', exact: true }).click();
   await page.getByRole('button', { name: 'Resume conversation', exact: true }).click();
   await expect(page.getByText(/Listening… Pause/)).toBeVisible();
   await page.evaluate(() => window.conversationQA.utterance());

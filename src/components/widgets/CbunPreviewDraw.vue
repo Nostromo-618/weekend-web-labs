@@ -47,6 +47,10 @@ function onReady(instance) {
   border-bottom-right-radius: var(--vd-card-border-radius, var(--card-border-radius));
   overflow: hidden;
 }
+.cbun-draw-wrap :deep(.vd-draw-shape) {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 
 @media (max-width: 768px) {
   .cbun-draw-wrap :deep(.vd-draw-toolbar) {

@@ -15,17 +15,26 @@ test('chat composer remains reachable when the viewport shrinks for a keyboard',
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test('Hex Earth panels fit the stage at every dock edge and after resizing', async ({ page }) => {
-  const startedWide = (page.viewportSize()?.width || 0) > 640;
-  await main(page, 'demos/hex-earth');
+test('Hex Earth controls stay on the full stage without the labs dock', async ({ page }) => {
+  await page.goto('/#demos/hex-earth');
+  if (await page.getByTestId('disclaimer-gate').isVisible())
+    await page.getByTestId('disclaimer-accept').click();
+  await expect(page.locator('nav.vd-site-dock')).toHaveCount(0);
+  await expect(page.locator('header.wwl-earth-launchers')).toHaveCount(0);
   for (const edge of ['left', 'right', 'top', 'bottom']) {
     await page.evaluate((value) => localStorage.setItem('wwl-site-dock', value), edge);
     await page.reload();
+    if (await page.getByTestId('disclaimer-gate').isVisible())
+      await page.getByTestId('disclaimer-accept').click();
     const stage = page.locator('.wwl-earth-stage');
     await expect(stage.locator('canvas')).toBeVisible();
-    if ((page.viewportSize()?.width || 0) <= 640) await page.getByTestId('controls-toggle').click();
+    await expect(page.locator('nav.vd-site-dock')).toHaveCount(0);
     const panel = page.getByTestId('controls-panel');
     await expect(panel).toBeVisible();
+    await expect(page.getByTestId('stats-toggle')).toBeVisible();
+    await expect(page.getByTestId('reset-layout')).toBeVisible();
+    await expect(page.getByTestId('back-to-demos')).toBeVisible();
+    await expect(panel.getByText('wwl-hex-earth', { exact: true })).toBeVisible();
     await expect
       .poll(async () => {
         const s = await stage.boundingBox();
@@ -40,13 +49,11 @@ test('Hex Earth panels fit the stage at every dock edge and after resizing', asy
       .toBe(true);
   }
   await page.setViewportSize({ width: 390, height: 600 });
-  if (startedWide) {
-    await expect(page.getByTestId('controls-panel')).toBeHidden();
-    await page.getByTestId('controls-toggle').click();
-  }
   await expect(page.getByTestId('controls-panel')).toBeVisible();
-  await page.getByRole('button', { name: 'Close controls', exact: true }).click();
-  await expect(page.getByTestId('controls-panel')).toBeHidden();
+  await page.getByTestId('back-to-demos').click();
+  await expect(page).toHaveURL(/#demos$/);
+  await expect(page.locator('.wwl-earth-stage')).toHaveCount(0);
+  await expect(page.locator('nav.vd-site-dock')).toBeVisible();
 });
 
 async function main(page, route = 'home') {
@@ -170,7 +177,7 @@ test('missing WebGPU is explained before any download', async ({ page }) => {
   ).toBeDisabled();
   await expect(page.locator('.wwl-ai-chat-primary')).toContainText(/WebGPU/);
 });
-test('Hex Earth lazy route retains dock, panels, gestures and releases canvas on exit', async ({
+test('Hex Earth lazy route hides the dock, keeps panels and gestures, and restores the shell on exit', async ({
   page,
 }, info) => {
   const geography = [];
@@ -185,9 +192,12 @@ test('Hex Earth lazy route retains dock, panels, gestures and releases canvas on
   await expect(stage.locator('canvas')).toBeVisible();
   await expect.poll(() => geography.length).toBeGreaterThan(0);
   const phone = (page.viewportSize()?.width || 0) <= 640;
-  if (phone) await page.getByTestId('controls-toggle').click();
+  await expect(page.getByTestId('controls-panel')).toBeVisible();
+  await expect(page.locator('nav.vd-site-dock')).toHaveCount(0);
+  await expect(page.locator('header.wwl-earth-launchers')).toHaveCount(0);
   await expect(page.getByTestId('status')).not.toHaveText(/loading|failed/i, { timeout: 30000 });
-  await expect(page.getByTestId(phone ? 'tier-low' : 'tier-mid')).toHaveClass(/active/);
+  await expect(page.getByTestId(phone ? 'tier-low' : 'tier-high')).toHaveClass(/active/);
+  await expect(page.getByTestId('region-world')).toHaveClass(/active/);
   await expect(page.getByTestId('run-benchmarks')).toHaveText('Run benchmarks');
   if (!phone) {
     const panel = page.getByTestId('controls-panel');
@@ -196,10 +206,8 @@ test('Hex Earth lazy route retains dock, panels, gestures and releases canvas on
     await page.keyboard.press('ArrowRight');
     await expect.poll(async () => (await panel.boundingBox()).x).toBeGreaterThan(before.x);
   }
-  await page.getByRole('button', { name: 'Close controls', exact: true }).click();
   await page.getByTestId('stats-toggle').click();
   await expect(page.getByTestId('stats-panel')).toBeVisible();
-  await expect(page.locator('nav.vd-site-dock')).toBeVisible();
   await page.screenshot({
     path: path.join(shots, `${info.project.name}-hex-earth.png`),
     fullPage: true,
@@ -228,6 +236,7 @@ test('Hex Earth lazy route retains dock, panels, gestures and releases canvas on
   });
   await page.goto('/#home');
   await expect(stage).toHaveCount(0);
+  await expect(page.locator('nav.vd-site-dock')).toBeVisible();
 });
 
 test('General chat never requests documentation retrieval assets', async ({ page }) => {

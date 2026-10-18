@@ -169,15 +169,9 @@ async function readMessage(msg, idx) {
 }
 const tokenCount = ref(null);
 const clearModalOpen = ref(false);
-const {
-  root: workspaceRoot,
-  panel: settingsPanel,
-  settingsButton,
-  wide: workspaceWide,
-  open: settingsOpen,
-  modal: settingsModal,
-  height: workspaceHeight,
-} = useChatWorkspace(clearModalOpen);
+const { root: workspaceRoot, height: workspaceHeight } = useChatWorkspace();
+const settingsOpen = ref(false);
+const settingsButton = ref(null);
 const settingsId = `wwl-chat-settings-${useId()}`;
 const voiceSettingsTarget = ref(null);
 const conversationLabel = computed(
@@ -470,7 +464,7 @@ async function focusComposer(opts = {}) {
   if (
     !shouldFocusChatComposer({
       force,
-      modalOpen: clearModalOpen.value,
+      modalOpen: clearModalOpen.value || settingsOpen.value,
       chatReady,
       activeIsComposer: active === composerInput.value,
       activeIsOtherControl: isOtherInteractiveControl(active),
@@ -480,7 +474,7 @@ async function focusComposer(opts = {}) {
   }
   await nextTick();
   const el = composerInput.value;
-  if (!el || clearModalOpen.value || !loaded.value || loading.value) return;
+  if (!el || clearModalOpen.value || settingsOpen.value || !loaded.value || loading.value) return;
   if (el.disabled) return;
   try {
     el.focus({ preventScroll: true });
@@ -941,6 +935,7 @@ onMounted(async () => {
   document.addEventListener('visibilitychange', foregroundChanged);
   document.addEventListener('freeze', pauseForPage);
   window.addEventListener('pagehide', pauseForPage);
+  window.addEventListener('keydown', onNestedClearKeydown, true);
 });
 
 onBeforeUnmount(() => {
@@ -959,6 +954,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', foregroundChanged);
   document.removeEventListener('freeze', pauseForPage);
   window.removeEventListener('pagehide', pauseForPage);
+  window.removeEventListener('keydown', onNestedClearKeydown, true);
 });
 
 watch(
@@ -985,6 +981,19 @@ watch(clearModalOpen, async (open, wasOpen) => {
   }
 });
 
+watch(settingsOpen, (open) => {
+  if (open) return;
+  // WebKit drops the dialog's focus return during Escape. Put focus back on
+  // Settings once the key event has finished, and leave a restore that already
+  // landed on a control alone.
+  setTimeout(() => {
+    if (!alive || settingsOpen.value || clearModalOpen.value) return;
+    const active = document.activeElement;
+    if (active && active !== document.body && active !== document.documentElement) return;
+    const el = settingsButton.value?.$el ?? settingsButton.value;
+    el?.focus?.({ preventScroll: true });
+  }, 0);
+});
 watch(loaded, async (isLoaded, wasLoaded) => {
   if (isLoaded && !wasLoaded && !loading.value && !clearModalOpen.value) {
     await focusComposer();
@@ -993,8 +1002,42 @@ watch(loaded, async (isLoaded, wasLoaded) => {
 watch(selectedModelId, () => {
   if (!conversationOwned.value) speech.dispose();
 });
+function clearStorageDialog() {
+  return document.querySelector('.vd-modal[aria-label="Clear model storage?"]');
+}
+
+function onNestedClearKeydown(event) {
+  if (!settingsOpen.value || !clearModalOpen.value) return;
+  const dialog = clearStorageDialog();
+  if (!dialog) return;
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    clearModalOpen.value = false;
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  const controls = [...dialog.querySelectorAll('button:not([disabled])')].filter(
+    (el) => el.getClientRects().length > 0,
+  );
+  if (!controls.length) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const first = controls[0];
+  const last = controls[controls.length - 1];
+  const index = controls.indexOf(document.activeElement);
+  const next = event.shiftKey
+    ? index <= 0
+      ? last
+      : controls[index - 1]
+    : index === -1 || index >= controls.length - 1
+      ? first
+      : controls[index + 1];
+  next.focus();
+}
+
 async function suspend() {
-  if (!workspaceWide.value) settingsOpen.value = false;
+  settingsOpen.value = false;
   await endConversation();
   speech.dispose();
   uiOperation++;
@@ -1021,7 +1064,7 @@ defineExpose({ suspend, getModelId: () => selectedModelId.value });
       :style="{ '--wwl-chat-height': workspaceHeight }"
       :aria-busy="loading ? 'true' : 'false'"
     >
-      <div class="wwl-ai-chat-primary" :inert="settingsModal ? true : undefined">
+      <div class="wwl-ai-chat-primary">
         <div class="wwl-ai-header">
           <div class="wwl-ai-header-left">
             <VdIcon name="robot" />
@@ -1151,10 +1194,11 @@ defineExpose({ suspend, getModelId: () => selectedModelId.value });
                 {{
                   loaded
                     ? 'Ask anything. Answers stay on this device.'
-                    : settingsOpen
-                      ? 'Load a model in the Settings panel, or choose Voice Conversation Mode above.'
-                      : 'Open Settings to load a model, or choose Voice Conversation Mode above.'
+                    : 'Open Settings to load a model, or choose Voice Conversation Mode above.'
                 }}
+              </p>
+              <p v-if="flowchartDocument">
+                Turn the flowchart off to choose from more chat models.
               </p>
               <VdButton
                 v-if="!loaded && !settingsOpen"
@@ -1296,239 +1340,207 @@ defineExpose({ suspend, getModelId: () => selectedModelId.value });
           </p>
         </div>
       </div>
-      <Teleport to="body" :disabled="workspaceWide">
-        <div
-          v-if="settingsModal"
-          class="wwl-ai-settings-backdrop"
-          data-testid="chat-settings-backdrop"
-          aria-hidden="true"
-          @click="settingsOpen = false"
-        ></div>
-        <aside
-          v-show="settingsOpen"
-          ref="settingsPanel"
-          :id="settingsId"
-          class="wwl-ai-settings-panel"
-          :class="{ 'wwl-ai-settings-drawer': !workspaceWide }"
-          :role="settingsModal ? 'dialog' : 'complementary'"
-          :aria-modal="settingsModal ? 'true' : undefined"
-          aria-label="Chat settings"
-          tabindex="-1"
-          :inert="!settingsOpen ? true : undefined"
-        >
-          <header class="wwl-ai-settings-header">
-            <h3>Settings</h3>
-            <VdButton
-              size="sm"
-              variant="ghost"
-              aria-label="Close settings"
-              @click="settingsOpen = false"
-              ><VdIcon name="x" aria-hidden="true"
-            /></VdButton>
-          </header>
-          <div class="wwl-ai-settings-content">
-            <section aria-label="Model settings">
-              <h4>Model</h4>
-              <div class="wwl-ai-setup-grid">
-                <div class="wwl-ai-setup-col">
-                  <label class="wwl-form-label" for="wwl-ai-model-select"
-                    >Model · download size shown before loading</label
-                  >
-                  <select
-                    id="wwl-ai-model-select"
-                    class="vd-select wwl-ai-model-select"
-                    :value="selectedPrimaryId"
-                    :disabled="loading || streaming || conversationLocked"
-                    @change="applySelection($event.target.value)"
-                  >
-                    <optgroup v-for="group in groupedModels" :key="group.id" :label="group.label">
-                      <option
-                        v-for="model in group.models"
-                        :key="model.id"
-                        :value="model.id"
-                        :disabled="systemInfo?.webgpuSupported === false"
-                      >
-                        {{ model.label }}
-                      </option>
-                    </optgroup>
-                  </select>
-                  <label
-                    v-if="selectedVariants.length > 1"
-                    class="wwl-ai-note"
-                    for="wwl-ai-precision-select"
-                    >Precision</label
-                  >
-                  <select
-                    v-if="selectedVariants.length > 1"
-                    id="wwl-ai-precision-select"
-                    class="vd-select"
-                    :value="selectedModelId"
-                    :disabled="loading || streaming || conversationLocked"
-                    @change="applySelection($event.target.value)"
-                  >
-                    <option
-                      v-for="variant in selectedVariants"
-                      :key="variant.id"
-                      :value="variant.id"
-                    >
-                      {{ variant.precision.toUpperCase()
-                      }}{{ variant.variantOf ? ' · Compatibility' : '' }} ·
-                      {{ Math.round(variant.approxBytes / 1e6) }} MB
-                    </option>
-                  </select>
-                  <p v-if="fallbackNote && !selectedResolved.loadBlocked" class="wwl-ai-note">
-                    {{ fallbackNote }}
-                  </p>
-                  <details class="wwl-ai-diagnostics" open>
-                    <summary>Model details</summary>
-                    <WwlModelDetails :model-id="selectedModelId" />
-                  </details>
-                  <p v-if="cacheHint" class="wwl-ai-note">{{ cacheHint }}</p>
-                  <p v-if="capacityNote" class="wwl-ai-capacity-note" role="status">
-                    {{ capacityNote }}
-                  </p>
-                </div>
-              </div>
-
-              <p class="vd-text-muted vd-text-sm">
-                Gemma 4 E2B is the default. Experimental Ministral 3 and Mistral 7B choices are
-                optional, and Qwen3 0.6B is not offered. Inference stays in your browser.
-              </p>
-
-              <div v-if="(loading || progressText) && !errorBanner" class="wwl-ai-progress">
-                <VdProgress :value="progressPct" />
-                <div class="vd-text-sm vd-text-muted">{{ progressText }}</div>
-                <p v-if="freezeHint" class="wwl-ai-freeze-hint">{{ freezeHint }}</p>
-              </div>
-
-              <p
-                v-if="fallbackNote && selectedResolved.loadBlocked"
-                class="wwl-ai-error"
-                role="status"
-              >
-                {{ fallbackNote }}
-              </p>
-
-              <div class="wwl-ai-setup-actions">
-                <VdButton
-                  variant="primary"
-                  :loading="loading"
-                  :disabled="loadDisabled || streaming || conversationLocked"
-                  @click="
-                    conversationOwned ? startConversation() : loaded ? switchModel() : loadModel()
-                  "
-                >
-                  <VdIcon name="download-simple" />
-                  {{
-                    conversationOwned
-                      ? 'Resume with selected settings'
-                      : selectedResolved.loadBlocked
-                        ? 'Runtime unsupported'
-                        : loaded
-                          ? 'Switch model'
-                          : 'Load AI Model'
-                  }}
-                </VdButton>
-              </div>
-            </section>
-            <section aria-label="Reply delivery settings">
-              <h4>Text replies</h4>
-              <label
-                >Reply delivery<select
-                  v-model="delivery"
-                  class="vd-select"
-                  :disabled="loading || streaming || conversationLocked"
-                >
-                  <option value="checked-stream">Checked live text</option>
-                  <option value="complete">Full-answer check</option>
-                </select></label
-              >
-              <p class="wwl-ai-note">
-                Live text is checked before display. Later context can still trigger a block after
-                earlier text appeared. Spoken turns always use a full-answer check.
-              </p>
-            </section>
-            <section aria-label="Voice settings">
-              <h4>Voice</h4>
-              <p class="wwl-ai-note">
-                Voice Conversation Mode uses the selected chat model and voice, Whisper and voice
-                detection · about
-                {{ conversationDownloadMB }} MB of model downloads, plus runtime files. Loaded
-                models are reused. English · take turns.
-              </p>
-              <p v-if="conversationOwned && conversationState.progress" class="wwl-ai-note">
-                {{ conversationState.progress }}
-              </p>
-              <div ref="voiceSettingsTarget"></div>
-            </section>
-            <section aria-label="Storage settings">
-              <h4>Storage</h4>
-              <details class="wwl-ai-diagnostics">
-                <summary>Device and storage details</summary>
-                <aside class="wwl-ai-storage-panel" aria-label="Local storage for this site">
-                  <div class="wwl-ai-storage-title">Storage &amp; memory</div>
-                  <div class="vd-text-sm vd-text-muted">
-                    This origin: <strong>{{ storageUsage }}</strong>
-                  </div>
-                  <div class="vd-text-sm vd-text-muted">Quota: {{ storageQuota }}</div>
-                  <div class="wwl-ai-storage-meter" aria-hidden="true">
-                    <div
-                      class="wwl-ai-storage-meter-fill"
-                      :style="{ width: storagePct + '%' }"
-                    ></div>
-                  </div>
-                  <p class="wwl-ai-fineprint">
-                    Includes Cache Storage / IndexedDB for this page. GPU memory is not available to
-                    the page.
-                  </p>
-                </aside>
-
-                <div class="wwl-ai-system-info">
-                  <div class="wwl-ai-storage-title">System Info</div>
-                  <div class="vd-text-sm vd-text-muted">
-                    WebGPU:
-                    {{
-                      systemInfo
-                        ? systemInfo.webgpuSupported
-                          ? 'Supported'
-                          : 'Not supported'
-                        : 'Checking…'
-                    }}
-                  </div>
-                  <div class="vd-text-sm vd-text-muted">
-                    GPU: {{ systemInfo?.adapterName || systemInfo?.error || 'Detecting…' }}
-                  </div>
-                  <div class="vd-text-sm vd-text-muted">
-                    shader-f16:
-                    {{
-                      systemInfo
-                        ? systemInfo.shaderF16
-                          ? 'Supported'
-                          : 'Unavailable'
-                        : 'Checking…'
-                    }}
-                  </div>
-                  <div
-                    class="vd-text-sm vd-text-muted"
-                    :title="'deviceMemory is browser-capped/approximate; GPU VRAM is not exposed to web pages.'"
-                  >
-                    Device: {{ deviceSummary }}
-                  </div>
-                </div>
-              </details>
-              <VdButton
-                size="sm"
-                variant="ghost"
-                :disabled="loading || streaming || conversationLocked"
-                @click="clearModalOpen = true"
-                ><VdIcon name="trash" />Clear storage</VdButton
-              >
-            </section>
-          </div>
-        </aside>
-      </Teleport>
     </VdCard>
   </div>
+  <VdModal
+    :id="settingsId"
+    v-model:open="settingsOpen"
+    class="wwl-ai-settings-modal"
+    title="Settings"
+    size="xl"
+  >
+    <div class="wwl-ai-settings-layout">
+      <div class="wwl-ai-settings-columns">
+        <div class="wwl-ai-settings-column">
+          <section aria-label="Model settings">
+            <h4>Model</h4>
+            <div class="wwl-ai-setup-grid">
+              <div class="wwl-ai-setup-col">
+                <label class="wwl-form-label" for="wwl-ai-model-select"
+                  >Model · download size shown before loading</label
+                >
+                <select
+                  id="wwl-ai-model-select"
+                  class="vd-select wwl-ai-model-select"
+                  :value="selectedPrimaryId"
+                  :disabled="loading || streaming || conversationLocked"
+                  @change="applySelection($event.target.value)"
+                >
+                  <optgroup v-for="group in groupedModels" :key="group.id" :label="group.label">
+                    <option
+                      v-for="model in group.models"
+                      :key="model.id"
+                      :value="model.id"
+                      :disabled="systemInfo?.webgpuSupported === false"
+                    >
+                      {{ model.label }}
+                    </option>
+                  </optgroup>
+                </select>
+                <label
+                  v-if="selectedVariants.length > 1"
+                  class="wwl-ai-note"
+                  for="wwl-ai-precision-select"
+                  >Precision</label
+                >
+                <select
+                  v-if="selectedVariants.length > 1"
+                  id="wwl-ai-precision-select"
+                  class="vd-select"
+                  :value="selectedModelId"
+                  :disabled="loading || streaming || conversationLocked"
+                  @change="applySelection($event.target.value)"
+                >
+                  <option v-for="variant in selectedVariants" :key="variant.id" :value="variant.id">
+                    {{ variant.precision.toUpperCase()
+                    }}{{ variant.variantOf ? ' · Compatibility' : '' }} ·
+                    {{ Math.round(variant.approxBytes / 1e6) }} MB
+                  </option>
+                </select>
+                <p v-if="fallbackNote && !selectedResolved.loadBlocked" class="wwl-ai-note">
+                  {{ fallbackNote }}
+                </p>
+                <details class="wwl-ai-diagnostics" open>
+                  <summary>Model details</summary>
+                  <WwlModelDetails :model-id="selectedModelId" />
+                </details>
+                <p v-if="cacheHint" class="wwl-ai-note">{{ cacheHint }}</p>
+                <p v-if="capacityNote" class="wwl-ai-capacity-note" role="status">
+                  {{ capacityNote }}
+                </p>
+              </div>
+            </div>
+
+            <p class="vd-text-muted vd-text-sm">
+              Gemma 4 E2B is the default. Experimental Ministral 3 and Mistral 7B choices are
+              optional, and Qwen3 0.6B is not offered. Inference stays in your browser.
+            </p>
+
+            <div v-if="(loading || progressText) && !errorBanner" class="wwl-ai-progress">
+              <VdProgress :value="progressPct" />
+              <div class="vd-text-sm vd-text-muted">{{ progressText }}</div>
+              <p v-if="freezeHint" class="wwl-ai-freeze-hint">{{ freezeHint }}</p>
+            </div>
+
+            <p
+              v-if="fallbackNote && selectedResolved.loadBlocked"
+              class="wwl-ai-error"
+              role="status"
+            >
+              {{ fallbackNote }}
+            </p>
+
+            <div class="wwl-ai-setup-actions">
+              <VdButton
+                variant="primary"
+                :loading="loading"
+                :disabled="loadDisabled || streaming || conversationLocked"
+                @click="
+                  conversationOwned ? startConversation() : loaded ? switchModel() : loadModel()
+                "
+              >
+                <VdIcon name="download-simple" />
+                {{
+                  conversationOwned
+                    ? 'Resume with selected settings'
+                    : selectedResolved.loadBlocked
+                      ? 'Runtime unsupported'
+                      : loaded
+                        ? 'Switch model'
+                        : 'Load AI Model'
+                }}
+              </VdButton>
+            </div>
+          </section>
+          <section aria-label="Reply delivery settings">
+            <h4>Text replies</h4>
+            <label
+              >Reply delivery<select
+                v-model="delivery"
+                class="vd-select"
+                :disabled="loading || streaming || conversationLocked"
+              >
+                <option value="checked-stream">Checked live text</option>
+                <option value="complete">Full-answer check</option>
+              </select></label
+            >
+            <p class="wwl-ai-note">
+              Live text is checked before display. Later context can still trigger a block after
+              earlier text appeared. Spoken turns always use a full-answer check.
+            </p>
+          </section>
+        </div>
+        <section aria-label="Voice settings">
+          <h4>Voice</h4>
+          <p class="wwl-ai-note">
+            Voice Conversation Mode uses the selected chat model and voice, Whisper and voice
+            detection · about
+            {{ conversationDownloadMB }} MB of model downloads, plus runtime files. Loaded models
+            are reused. English · take turns.
+          </p>
+          <p v-if="conversationOwned && conversationState.progress" class="wwl-ai-note">
+            {{ conversationState.progress }}
+          </p>
+          <div ref="voiceSettingsTarget"></div>
+        </section>
+      </div>
+      <hr class="wwl-ai-settings-separator" />
+      <section aria-label="Storage settings" class="wwl-ai-settings-clear">
+        <h4>Storage</h4>
+        <details class="wwl-ai-diagnostics">
+          <summary>Device and storage details</summary>
+          <aside class="wwl-ai-storage-panel" aria-label="Local storage for this site">
+            <div class="wwl-ai-storage-title">Storage &amp; memory</div>
+            <div class="vd-text-sm vd-text-muted">
+              This origin: <strong>{{ storageUsage }}</strong>
+            </div>
+            <div class="vd-text-sm vd-text-muted">Quota: {{ storageQuota }}</div>
+            <div class="wwl-ai-storage-meter" aria-hidden="true">
+              <div class="wwl-ai-storage-meter-fill" :style="{ width: storagePct + '%' }"></div>
+            </div>
+            <p class="wwl-ai-fineprint">
+              Includes Cache Storage / IndexedDB for this page. GPU memory is not available to the
+              page.
+            </p>
+          </aside>
+
+          <div class="wwl-ai-system-info">
+            <div class="wwl-ai-storage-title">System Info</div>
+            <div class="vd-text-sm vd-text-muted">
+              WebGPU:
+              {{
+                systemInfo
+                  ? systemInfo.webgpuSupported
+                    ? 'Supported'
+                    : 'Not supported'
+                  : 'Checking…'
+              }}
+            </div>
+            <div class="vd-text-sm vd-text-muted">
+              GPU: {{ systemInfo?.adapterName || systemInfo?.error || 'Detecting…' }}
+            </div>
+            <div class="vd-text-sm vd-text-muted">
+              shader-f16:
+              {{ systemInfo ? (systemInfo.shaderF16 ? 'Supported' : 'Unavailable') : 'Checking…' }}
+            </div>
+            <div
+              class="vd-text-sm vd-text-muted"
+              :title="'deviceMemory is browser-capped/approximate; GPU VRAM is not exposed to web pages.'"
+            >
+              Device: {{ deviceSummary }}
+            </div>
+          </div>
+        </details>
+        <VdButton
+          size="sm"
+          variant="ghost"
+          :disabled="loading || streaming || conversationLocked"
+          @click="clearModalOpen = true"
+          ><VdIcon name="trash" />Clear storage</VdButton
+        >
+      </section>
+    </div>
+  </VdModal>
   <VdModal v-model:open="clearModalOpen" title="Clear model storage?" size="md">
     <p>
       This removes Cache Storage / IndexedDB / local markers this chat stored for
@@ -1981,86 +1993,99 @@ defineExpose({ suspend, getModelId: () => selectedModelId.value });
   box-sizing: border-box;
   min-height: calc(max(1.5em, 1.5rem) + 0.9rem + 1px);
 }
-.wwl-ai-settings-panel {
-  width: 320px;
-  flex: 0 0 320px;
+.wwl-ai-settings-layout {
+  container: wwl-settings / inline-size;
+}
+.wwl-ai-settings-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem 1.75rem;
+  align-items: start;
+}
+@supports not (container-type: inline-size) {
+  @media (min-width: 760px) {
+    .wwl-ai-settings-columns {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+}
+@container wwl-settings (min-width: 40rem) {
+  .wwl-ai-settings-columns {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+.wwl-ai-settings-column {
+  display: grid;
+  gap: 1.25rem;
   min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-primary);
-  border-left: 1px solid var(--border-color);
 }
-.wwl-ai-settings-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border-color);
-}
-.wwl-ai-settings-header h3 {
-  margin: 0;
-  font-size: 0.95rem;
-}
-.wwl-ai-settings-content {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
-  padding: 1rem;
-}
-.wwl-ai-settings-content section + section {
-  margin-top: 1.25rem;
-  border-top: 1px solid var(--border-color);
-  padding-top: 1rem;
-}
-.wwl-ai-settings-content h4 {
+.wwl-ai-settings-layout h4 {
   margin: 0 0 0.75rem;
   font-size: 0.85rem;
 }
-.wwl-ai-settings-content select {
+.wwl-ai-settings-layout select {
   width: 100%;
   min-width: 0;
   text-overflow: ellipsis;
 }
-.wwl-ai-settings-content :deep(p),
-.wwl-ai-settings-content :deep(label) {
+.wwl-ai-settings-layout :deep(p),
+.wwl-ai-settings-layout :deep(label) {
   overflow-wrap: anywhere;
 }
-.wwl-ai-settings-content .wwl-ai-setup-grid {
+.wwl-ai-settings-layout .wwl-ai-setup-grid {
   display: block;
 }
-.wwl-ai-settings-content .wwl-ai-setup-col {
+.wwl-ai-settings-layout .wwl-ai-setup-col {
   min-width: 0;
   display: grid;
   gap: 0.65rem;
 }
-.wwl-ai-settings-content .wwl-ai-setup-actions {
+.wwl-ai-settings-layout .wwl-ai-setup-actions {
   padding: 0.65rem 0;
   display: flex;
   flex-wrap: wrap;
 }
-.wwl-ai-settings-content .wwl-ai-diagnostics {
+.wwl-ai-settings-layout .wwl-ai-diagnostics {
   margin: 0.4rem 0;
 }
-.wwl-ai-settings-content .wwl-ai-storage-panel {
+.wwl-ai-settings-clear {
+  min-width: 0;
+}
+.wwl-ai-settings-separator {
+  border: 0;
+  border-top: 1px solid var(--border-color, var(--vd-border-color));
+  margin: 1.25rem 0;
+}
+.wwl-ai-settings-layout .wwl-ai-storage-panel {
   margin-bottom: 0.75rem;
 }
-.wwl-ai-settings-drawer {
-  position: fixed;
-  z-index: 1040;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: min(320px, calc(100vw - 2rem));
-  max-height: 100dvh;
-  box-shadow: var(--vd-shadow-lg);
+/* VdModal has no max-height prop. Cap this dialog only so Storage can unfold
+   without the panel leaving the viewport; the body scrolls, the header stays. */
+:global(.wwl-ai-settings-modal.vd-modal) {
+  overflow: hidden;
 }
-.wwl-ai-settings-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1030;
-  background: rgb(0 0 0 / 45%);
+:global(.wwl-ai-settings-modal .vd-modal-panel) {
+  max-height: min(
+    90dvh,
+    calc(100dvh - 3.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+  );
+  overflow: hidden;
+}
+:global(.wwl-ai-settings-modal .vd-modal-header) {
+  flex-shrink: 0;
+}
+:global(.wwl-ai-settings-modal .vd-modal-body) {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+@media (width <= 575.98px) {
+  :global(.wwl-ai-settings-modal .vd-modal-panel) {
+    max-height: min(
+      90dvh,
+      calc(100dvh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+    );
+  }
 }
 .wwl-ai-form {
   flex: 0 0 auto;

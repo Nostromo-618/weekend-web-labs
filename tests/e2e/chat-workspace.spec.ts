@@ -1,19 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 const settings = (page) => page.getByRole('button', { name: 'Settings', exact: true });
-const panel = (page) => page.locator('.wwl-ai-settings-panel');
+const settingsDialog = (page) => page.getByRole('dialog', { name: 'Settings', exact: true });
 const composer = (page) => page.getByRole('textbox', { name: 'Message', exact: true });
 async function resize(page, viewport) {
   await page.setViewportSize(viewport);
-  await expect
-    .poll(() =>
-      panel(page).evaluate(
-        (el) =>
-          el.classList.contains('wwl-ai-settings-drawer') ===
-          document.querySelector('.wwl-ai-workspace-host').getBoundingClientRect().width < 960,
-      ),
-    )
-    .toBe(true);
 }
 async function settle(page) {
   await page.evaluate(
@@ -39,7 +30,7 @@ async function openSettings(page) {
 }
 async function closeSettings(page) {
   if ((await settings(page).getAttribute('aria-expanded')) === 'true')
-    await page.getByRole('button', { name: 'Close settings' }).click();
+    await settingsDialog(page).getByRole('button', { name: 'Close', exact: true }).click();
 }
 
 for (const theme of ['light', 'dark']) {
@@ -59,7 +50,8 @@ for (const theme of ['light', 'dark']) {
         (value) => document.documentElement.setAttribute('data-theme', value),
         theme,
       );
-      await expect(settings(page)).toHaveAttribute('aria-expanded', String(viewport.width >= 960));
+      await expect(settings(page)).toHaveAttribute('aria-expanded', 'false');
+      await expect(page.locator('.wwl-ai-settings-panel, .wwl-ai-settings-drawer')).toHaveCount(0);
       await closeSettings(page);
       for (let i = 0; i < 3; i++) {
         await composer(page).fill(
@@ -83,8 +75,34 @@ for (const theme of ['light', 'dark']) {
       await page.getByLabel('Read-aloud voice').selectOption('neural');
       const after = await page.locator('.wwl-ai-messages').boundingBox();
       expect(Math.abs(before.height - after.height)).toBeLessThan(2);
-      if (viewport.width >= 960) expect(before.width - after.width).toBeGreaterThan(315);
-      else await expect(panel(page)).toHaveAttribute('aria-modal', 'true');
+      expect(Math.abs(before.width - after.width)).toBeLessThan(2);
+      const layout = await settingsDialog(page).evaluate((dialog) => {
+        const box = (name) => {
+          const rect = dialog.querySelector(`[aria-label="${name}"]`).getBoundingClientRect();
+          return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+        };
+        const separator = dialog.querySelector('.wwl-ai-settings-separator').getBoundingClientRect();
+        return {
+          model: box('Model settings'),
+          voice: box('Voice settings'),
+          storage: box('Storage settings'),
+          separatorY: separator.y,
+          separatorWidth: separator.width,
+          panelClass: dialog.querySelector('.vd-modal-panel').className,
+        };
+      });
+      expect(layout.panelClass).toContain('vd-modal-panel-xl');
+      expect(layout.separatorY).toBeGreaterThan(layout.model.y);
+      expect(layout.separatorY).toBeGreaterThan(layout.voice.y - 1);
+      expect(layout.storage.y).toBeGreaterThan(layout.separatorY);
+      expect(layout.separatorWidth).toBeGreaterThan(Math.max(layout.model.width, layout.voice.width) - 8);
+      if (viewport.width >= 800) {
+        expect(layout.voice.x).toBeGreaterThan(layout.model.x + layout.model.width - 8);
+        expect(Math.abs(layout.model.y - layout.voice.y)).toBeLessThan(16);
+        expect(layout.storage.width).toBeGreaterThan(layout.model.width + 16);
+      } else {
+        expect(layout.voice.y).toBeGreaterThan(layout.model.y + layout.model.height - 8);
+      }
       await closeSettings(page);
       await composer(page).scrollIntoViewIfNeeded();
       await expect(composer(page)).toBeInViewport();
@@ -140,13 +158,13 @@ test('live playback status stays below the composer while a long transcript scro
   await expect(status).toBeEmpty();
 });
 
-test('narrow drawer traps focus, restores it, handles backdrop and nested storage modal', async ({
+test('settings modal traps focus, restores it, handles backdrop and nested storage modal', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/tests/fixtures/chat-vue-harness.html');
   await settings(page).click();
-  const close = page.getByRole('button', { name: 'Close settings' });
+  const close = settingsDialog(page).getByRole('button', { name: 'Close', exact: true });
   await expect(close).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   await expect(page.getByRole('button', { name: 'Clear storage', exact: true })).toBeFocused();
@@ -155,15 +173,15 @@ test('narrow drawer traps focus, restores it, handles backdrop and nested storag
   await page.getByRole('button', { name: 'Clear storage', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Clear model storage?' })).toBeVisible();
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
-  await expect(panel(page)).toBeVisible();
-  expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden');
+  await expect(settingsDialog(page)).toBeVisible();
+  await expect(page.locator('.wwl-ai-settings-panel, .wwl-ai-settings-drawer')).toHaveCount(0);
   await page.keyboard.press('Escape');
-  await expect(panel(page)).toBeHidden();
+  await expect(settingsDialog(page)).toBeHidden();
   await expect(settings(page)).toBeFocused();
-  expect(await page.evaluate(() => document.body.style.overflow)).not.toBe('hidden');
   await settings(page).click();
-  await page.getByTestId('chat-settings-backdrop').click({ position: { x: 5, y: 200 } });
+  await settingsDialog(page).locator('.vd-modal-backdrop').click({ position: { x: 2, y: 2 } });
   await expect(settings(page)).toBeFocused();
+  await expect(settingsDialog(page)).toBeHidden();
 });
 
 test('panel toggles and breakpoint changes preserve downloads, recording, playback and preferences', async ({
@@ -254,22 +272,29 @@ test('both real demo hosts keep a lazy workspace with documentation below', asyn
     if ((await flowchartToggle.count()) > 0 && (await flowchartToggle.getAttribute('aria-pressed')) === 'true') {
       await flowchartToggle.click();
     }
-    await expect(panel(page)).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Open Settings', exact: true })).toHaveCount(0);
+    await expect(settingsDialog(page)).toBeHidden();
+    await expect(page.locator('.wwl-ai-settings-panel, .wwl-ai-settings-drawer')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Open Settings', exact: true })).toBeVisible();
     await expect(
-      page.getByText(
-        'Load a model in the Settings panel, or choose Voice Conversation Mode above.',
-      ),
+      page.getByText('Open Settings to load a model, or choose Voice Conversation Mode above.'),
     ).toBeVisible();
     await settle(page);
     const before = await page.locator('.wwl-ai-messages').boundingBox();
-    await page.getByRole('button', { name: 'Close settings' }).click();
+    await settings(page).click();
+    await expect(settingsDialog(page).locator('.vd-modal-panel')).toHaveClass(/vd-modal-panel-xl/);
+    await expect(page.getByRole('button', { name: 'Open Settings', exact: true })).toHaveCount(0);
+    const during = await page.locator('.wwl-ai-messages').boundingBox();
+    expect(Math.abs(before.height - during.height)).toBeLessThan(2);
+    expect(Math.abs(before.width - during.width)).toBeLessThan(2);
+    await settingsDialog(page).getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(settingsDialog(page)).toBeHidden();
+    await expect(page.locator('.wwl-ai-settings-panel, .wwl-ai-settings-drawer')).toHaveCount(0);
     const after = await page.locator('.wwl-ai-messages').boundingBox();
     expect(Math.abs(before.height - after.height)).toBeLessThan(2);
-    expect(after.width - before.width).toBeGreaterThan(315);
+    expect(Math.abs(after.width - before.width)).toBeLessThan(2);
     await expect(page.getByRole('button', { name: 'Open Settings', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Open Settings', exact: true }).click();
-    await expect(panel(page)).toBeVisible();
+    await expect(settingsDialog(page)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Open Settings', exact: true })).toHaveCount(0);
     if (test.info().project.name === 'Chromium Desktop')
       await page.screenshot({ path: 'qa/theme-refresh/chat-settings-open.png' });

@@ -37,18 +37,22 @@ try {
     assert.equal(await voice.locator('option').count(), 28);
     await voice.selectOption('bf_emma');
     await page.locator('#wwl-ai-model-select').selectOption('LFM2.5-2.6B-q4f16-ONNX');
-    if (width === 390) {
-      const drawer = await page.locator('.wwl-ai-settings-panel').evaluate((el) => ({
-        parent: el.parentElement.tagName,
-        top: el.getBoundingClientRect().top,
-      }));
-      assert.equal(drawer.parent, 'BODY');
-      assert.equal(drawer.top, 0);
-    }
     await voice.scrollIntoViewIfNeeded();
+    const dialog = page.getByRole('dialog', { name: 'Settings', exact: true });
+    assert.match(
+      (await dialog.locator('.vd-modal-panel').getAttribute('class')) || '',
+      /vd-modal-panel-xl/,
+    );
+    if (width === 390) {
+      const stacked = await dialog.evaluate((root) => {
+        const model = root.querySelector('[aria-label="Model settings"]').getBoundingClientRect();
+        const voice = root.querySelector('[aria-label="Voice settings"]').getBoundingClientRect();
+        return voice.top > model.top + 20;
+      });
+      assert.equal(stacked, true);
+    }
     await page.screenshot({ path: `qa/checked-stream/settings-${width}.png` });
-    if ((await page.locator('.wwl-ai-settings-panel').getAttribute('aria-modal')) === 'true')
-      await page.getByRole('button', { name: 'Close settings', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Close', exact: true }).click();
     await page.getByRole('button', { name: 'Compare', exact: true }).click();
     const delivery = page.getByRole('combobox', { name: 'Reply delivery', exact: true });
     await delivery.waitFor();

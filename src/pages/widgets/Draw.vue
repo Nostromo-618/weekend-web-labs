@@ -394,6 +394,10 @@ import '@wwl/wwl-cbun/draw/css';
   border-bottom-right-radius: var(--vd-card-border-radius, var(--card-border-radius));
   overflow: hidden;
 }
+.draw-stage-body :deep(.vd-draw-shape) {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .draw-state-bar {
   display: flex;
   flex-wrap: wrap;

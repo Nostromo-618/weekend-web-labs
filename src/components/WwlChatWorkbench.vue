@@ -2,12 +2,15 @@
 import {
   computed,
   defineAsyncComponent,
+  defineComponent,
+  h,
   nextTick,
   onBeforeUnmount,
   onMounted,
   ref,
   watch,
 } from 'vue';
+import { useTooltips, VdTooltip } from '@vanduo-oss/vd3';
 import { VdFlowchart, FLOWCHART_DOCUMENT_VERSION } from '@vanduo-oss/vd3-flowchart';
 import '@vanduo-oss/vd3-flowchart/css';
 import { getModelOption } from '@wwl/wwl-ai-chat';
@@ -42,6 +45,9 @@ const flowchartDocument = ref({
   edges: [],
 });
 const flowchartEditable = computed(() => !!getModelOption(selected.value)?.capabilities?.tools);
+const showFlowchartHeading = computed(() => !flowchartEditable.value || !!flowchartNotice.value);
+const inspectorLabel = computed(() => (inspectorOpen.value ? 'Hide inspector' : 'Show inspector'));
+const inspectorToolbarGroup = ref(null);
 const split = computed(() => flowchartOpen.value && !narrow.value);
 const stageStyle = computed(() =>
   split.value ? { '--wwl-chat-width': `${Math.round(flowchartRatio.value * 1000) / 10}%` } : {},
@@ -154,15 +160,96 @@ async function change(next) {
     changing.value = false;
   }
 }
+let flowchartChromeObserver = null;
+let flowchartChromeTarget = null;
+const TOOLBAR_TIP_CLASS = 'wwl-flowchart-tip-hit';
+/** vd3 tooltip triggers for package toolbar buttons. The flowchart builds those buttons outside Vue, so the labs host wraps them the same way VdTooltip does. */
+function stampFlowchartTooltips(root) {
+  if (!(root instanceof Element)) return;
+  const toolbar = root.querySelector('.vd-flowchart-toolbar');
+  if (!toolbar) return;
+  toolbar.querySelectorAll(`.${TOOLBAR_TIP_CLASS}`).forEach((hit) => {
+    if (!hit.querySelector('button[data-flowchart-action]')) hit.remove();
+  });
+  toolbar.querySelectorAll('button[data-flowchart-action]').forEach((button) => {
+    const label = button.getAttribute('aria-label')?.trim();
+    if (!label) return;
+    let hit = button.parentElement;
+    if (!hit?.classList.contains(TOOLBAR_TIP_CLASS)) {
+      hit = document.createElement('span');
+      hit.className = TOOLBAR_TIP_CLASS;
+      button.replaceWith(hit);
+      hit.appendChild(button);
+    }
+    if (hit.getAttribute('data-tooltip') !== label) hit.setAttribute('data-tooltip', label);
+    if (hit.getAttribute('data-tooltip-placement') !== 'bottom') {
+      hit.setAttribute('data-tooltip-placement', 'bottom');
+    }
+    if (button.hasAttribute('title')) button.removeAttribute('title');
+  });
+}
+const FlowchartToolbarTips = defineComponent({
+  name: 'FlowchartToolbarTips',
+  setup() {
+    const column = ref(null);
+    const marker = ref(null);
+    onMounted(() => {
+      const node = marker.value;
+      column.value = node instanceof Element ? node.closest('.wwl-flowchart-column') : null;
+      stampFlowchartTooltips(column.value);
+    });
+    useTooltips(column);
+    return () =>
+      h('span', {
+        ref: marker,
+        class: 'wwl-flowchart-tooltip-anchor',
+        hidden: true,
+        'aria-hidden': 'true',
+      });
+  },
+});
+function releaseFlowchartChrome() {
+  flowchartChromeObserver?.disconnect();
+  flowchartChromeObserver = null;
+  flowchartChromeTarget = null;
+  inspectorToolbarGroup.value = null;
+}
+function bindFlowchartChrome(root) {
+  releaseFlowchartChrome();
+  if (!root) return;
+  const sync = () => {
+    root.querySelectorAll('details.vd-flowchart-outline').forEach((node) => node.remove());
+    stampFlowchartTooltips(root);
+    const group = root.querySelector(
+      '.vd-flowchart-toolbar > .vd-flowchart-toolbar-group:last-child',
+    );
+    if (group !== inspectorToolbarGroup.value) inspectorToolbarGroup.value = group;
+    const shell = root.querySelector('.vd-flowchart-shell');
+    if (!shell || flowchartChromeTarget === shell) return;
+    flowchartChromeObserver?.disconnect();
+    flowchartChromeTarget = shell;
+    flowchartChromeObserver = new MutationObserver(sync);
+    flowchartChromeObserver.observe(shell, { childList: true });
+  };
+  flowchartChromeTarget = root;
+  flowchartChromeObserver = new MutationObserver(sync);
+  flowchartChromeObserver.observe(root, { childList: true, subtree: true });
+  sync();
+}
 watch(flowchartOpen, (open) => {
   if (open && pendingLayout.value) void layoutFlowchart();
+});
+watch(flowchartRoot, (root) => {
+  bindFlowchartChrome(root);
 });
 onMounted(() => {
   media = window.matchMedia('(max-width: 900px)');
   narrow.value = media.matches;
   media.addEventListener('change', onMedia);
+  bindFlowchartChrome(flowchartRoot.value);
 });
 onBeforeUnmount(() => {
+  releaseFlowchartChrome();
   media?.removeEventListener('change', onMedia);
   window.removeEventListener('pointermove', onSplitterMove);
   window.removeEventListener('pointerup', onSplitterUp);
@@ -251,28 +338,34 @@ onBeforeUnmount(() => {
         :class="{ 'is-inspector-hidden': !inspectorOpen }"
         aria-label="Flowchart canvas"
       >
-        <div class="wwl-flowchart-heading">
+        <div v-if="showFlowchartHeading" class="wwl-flowchart-heading">
           <p v-if="!flowchartEditable" class="wwl-flowchart-note">
             This model can read the flowchart but cannot change it.
           </p>
           <p v-if="flowchartNotice" class="wwl-flowchart-note" role="status">
             {{ flowchartNotice }}
           </p>
-          <button
-            type="button"
-            class="vd-btn vd-btn-outline"
-            :aria-pressed="inspectorOpen"
-            @click="setInspectorOpen(!inspectorOpen)"
-          >
-            {{ inspectorOpen ? 'Hide inspector' : 'Show inspector' }}
-          </button>
         </div>
+        <Teleport v-if="inspectorToolbarGroup" :to="inspectorToolbarGroup">
+          <VdTooltip class="wwl-flowchart-inspector-tip" :text="inspectorLabel" position="bottom">
+            <button
+              type="button"
+              class="vd-btn vd-btn-outline wwl-flowchart-inspector-toggle"
+              :aria-pressed="inspectorOpen"
+              :aria-label="inspectorLabel"
+              @click="setInspectorOpen(!inspectorOpen)"
+            >
+              {{ inspectorLabel }}
+            </button>
+          </VdTooltip>
+        </Teleport>
         <VdFlowchart
           ref="flowchartEditor"
           class="wwl-flowchart-canvas"
           :data="flowchartDocument"
           @change="onFlowchartChange"
         />
+        <FlowchartToolbarTips />
       </section>
     </div>
     <KeepAlive v-else
@@ -288,9 +381,37 @@ onBeforeUnmount(() => {
   margin-bottom: 0.6rem;
 }
 .wwl-chat-views .vd-btn,
-.wwl-flowchart-heading .vd-btn {
+.wwl-flowchart-inspector-toggle {
   padding: 0.4rem 0.7rem;
   font-size: 0.82rem;
+}
+.wwl-flowchart-inspector-tip {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+  border: 0;
+  background: none;
+}
+.wwl-flowchart-inspector-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  box-sizing: border-box;
+  height: 2.1rem;
+  min-height: 2.1rem;
+  margin: 0;
+  padding: 0 0.7rem;
+  line-height: 1;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.wwl-flowchart-tooltip-anchor {
+  display: none;
 }
 .wwl-chat-stage {
   display: flex;
@@ -326,6 +447,7 @@ onBeforeUnmount(() => {
   min-height: 320px;
   display: flex;
   flex-direction: column;
+  --wwl-flowchart-palette-width: 66px;
 }
 .wwl-flowchart-heading {
   display: flex;
@@ -344,12 +466,81 @@ onBeforeUnmount(() => {
   margin: 0;
   font-size: 0.85rem;
 }
+.wwl-flowchart-column :deep(.vd-flowchart-shell) {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.wwl-flowchart-column :deep(.vd-flowchart-arrange) {
+  display: none;
+}
+.wwl-flowchart-column :deep(.vd-flowchart-toolbar),
+.wwl-flowchart-column :deep(.vd-flowchart-toolbar-group) {
+  align-items: center;
+}
+.wwl-flowchart-column :deep(.vd-flowchart-toolbar-label),
+.wwl-flowchart-column :deep(.wwl-flowchart-tip-hit) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  box-sizing: border-box;
+  height: 2.1rem;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+  flex: 0 0 auto;
+  border: 0;
+  background: none;
+}
+.wwl-flowchart-column :deep(.vd-flowchart-toolbar button:disabled) {
+  pointer-events: none;
+}
+.wwl-flowchart-column :deep(.wwl-flowchart-tip-hit:has(button:disabled)) {
+  cursor: not-allowed;
+}
+.wwl-flowchart-column :deep(.vd-flowchart-body) {
+  grid-template-columns: var(--wwl-flowchart-palette-width) minmax(0, 1fr) 300px;
+}
+.wwl-flowchart-column :deep(.vd-flowchart-panel--palette) {
+  box-sizing: border-box;
+  width: var(--wwl-flowchart-palette-width);
+  min-width: var(--wwl-flowchart-palette-width);
+  max-width: var(--wwl-flowchart-palette-width);
+  padding-inline: 2px;
+}
+.wwl-flowchart-column :deep(.vd-flowchart-panel--palette .vd-flowchart-palette-btn) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 1px;
+}
+.wwl-flowchart-column :deep(.vd-flowchart-panel--palette .vd-flowchart-palette-label) {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
 .wwl-flowchart-column.is-inspector-hidden :deep(.vd-flowchart-panel--inspector) {
   display: none;
 }
 .wwl-flowchart-column.is-inspector-hidden :deep(.vd-flowchart-body) {
-  grid-template-columns: 88px minmax(0, 1fr);
+  grid-template-columns: var(--wwl-flowchart-palette-width) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
+}
+@media (max-width: 1180px) {
+  .wwl-flowchart-column :deep(.vd-flowchart-body) {
+    grid-template-columns: var(--wwl-flowchart-palette-width) minmax(0, 1fr);
+  }
+}
+@media (max-width: 840px) {
+  .wwl-flowchart-column :deep(.vd-flowchart-body),
+  .wwl-flowchart-column.is-inspector-hidden :deep(.vd-flowchart-body) {
+    grid-template-columns: 1fr;
+  }
+  .wwl-flowchart-column :deep(.vd-flowchart-panel--palette) {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    padding-inline: 0.95rem;
+  }
 }
 @media (max-width: 900px) {
   .wwl-chat-stage {

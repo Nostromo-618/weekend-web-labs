@@ -35,20 +35,6 @@ const entries = [
     preview: CbunPreviewHex,
   },
   {
-    id: 'code-editor',
-    title: 'Code editor',
-    icon: 'code',
-    blurb:
-      'Lightweight syntax-highlighted editor for playgrounds and snippets — @wwl/wwl-cbun/code-editor.',
-    strengths: [
-      'First-party highlighter (no highlight.js)',
-      'Tokenizer-only highlight subpath',
-      'Multi-language support including Vue SFC',
-    ],
-    docsHash: '#widgets/code-editor',
-    preview: CbunPreviewCodeEditor,
-  },
-  {
     id: 'music-player',
     title: 'Music player',
     icon: 'music-note',
@@ -61,6 +47,22 @@ const entries = [
     ],
     docsHash: '#widgets/music-player',
     preview: CbunPreviewMusic,
+    reversed: true,
+  },
+  {
+    id: 'code-editor',
+    title: 'Code editor',
+    icon: 'code',
+    blurb:
+      'Lightweight syntax-highlighted editor for playgrounds and snippets — @wwl/wwl-cbun/code-editor.',
+    strengths: [
+      'First-party highlighter (no highlight.js)',
+      'Tokenizer-only highlight subpath',
+      'Multi-language support including Vue SFC',
+    ],
+    docsHash: '#widgets/code-editor',
+    preview: CbunPreviewCodeEditor,
+    reversed: false,
   },
 ];
 
@@ -71,7 +73,7 @@ const installShell = `# clone beside Labs, then in package.json:
 <template>
   <section id="labs-widgets" data-labs-panel="widgets-landing">
     <div class="labs-page-header about-header">
-      <h2><i class="ph ph-package" aria-hidden="true"></i> Widgets</h2>
+      <h2><i class="ph ph-package" aria-hidden="true"></i> Miscellaneous Web Widgets</h2>
       <p class="vd-text-lg vd-text-muted">
         Live previews from <code>@wwl/wwl-cbun</code> — draw, hex grid, code editor, and music
         player.
@@ -91,7 +93,7 @@ const installShell = `# clone beside Labs, then in package.json:
         :blurb="entry.blurb"
         :strengths="entry.strengths"
         :docs-hash="entry.docsHash"
-        :reversed="index % 2 === 1"
+        :reversed="entry.reversed ?? index % 2 === 1"
       >
         <component :is="entry.preview" />
       </CbunShowcaseRow>

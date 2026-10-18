@@ -63,6 +63,7 @@ const liveRegionText = ref('');
 const showGate = computed(() => consentHydrated.value && consentView.value === 'gate');
 const showFarewell = computed(() => consentHydrated.value && consentView.value === 'farewell');
 const appUnlocked = computed(() => consentHydrated.value && consentView.value === 'accepted');
+const hexEarthActive = computed(() => route.value === 'demos' && demoSlug.value === 'hex-earth');
 
 const docHtmlCache = { neptune: null, aichat: null };
 let docLoadSeq = 0;
@@ -71,6 +72,7 @@ let lastTopLevelRoute = '';
 
 const neptuneVersion = computed(() => `v${COMPONENT_VERSION_MAP.neptune}`);
 const aichatVersion = computed(() => `v${COMPONENT_VERSION_MAP.aichat}`);
+const hexEarthVersion = computed(() => 'v0.1.0');
 
 function getComponentVersion(slug) {
   return COMPONENT_VERSION_MAP[slug] || '0.0.1';
@@ -276,22 +278,19 @@ watch(demoSlug, (slug) => {
   />
 
   <template v-else-if="appUnlocked">
-    <WwlHomeAtmosphere :active="true" />
+    <WwlHomeAtmosphere :active="!hexEarthActive" />
 
-    <LabsSiteDock :route="route" :widget-slug="widgetSlug" />
+    <LabsSiteDock v-if="!hexEarthActive" :route="route" :widget-slug="widgetSlug" />
 
     <main
       class="labs-main-shell"
+      :class="{ 'is-hex-earth': hexEarthActive }"
       :data-labs-route="route"
       :data-labs-widget="widgetSlug || undefined"
       :data-labs-demo="demoSlug || undefined"
     >
-      <section
-        v-if="route === 'demos' && demoSlug === 'hex-earth'"
-        class="wwl-earth-stage"
-        aria-label="Hex Earth demo"
-      >
-        <a href="#demos" class="wwl-earth-back">← Demos</a><HexEarthDemo embedded />
+      <section v-if="hexEarthActive" class="wwl-earth-stage" aria-label="Hex Earth demo">
+        <HexEarthDemo embedded />
       </section>
       <div
         class="labs-view labs-view-home"
@@ -300,48 +299,45 @@ watch(demoSlug, (slug) => {
         :inert="route !== 'home'"
       >
         <section class="hero">
-          <h2
-            class="hero-title"
-            style="
-              color: var(--color-primary);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            "
-          >
-            <svg
-              class="hero-atom-icon"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 100 100"
-              width="2.2em"
-              height="2.2em"
-              aria-hidden="true"
-            >
-              <g class="hero-atom-spin">
-                <g
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  opacity="0.9"
-                >
-                  <ellipse cx="50" cy="50" rx="31" ry="13"></ellipse>
-                  <g transform="rotate(60 50 50)">
+          <div class="hero-lockup">
+            <h2 class="hero-title" style="color: var(--color-primary)">
+              <svg
+                class="hero-atom-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 100 100"
+                width="2.2em"
+                height="2.2em"
+                aria-hidden="true"
+              >
+                <g class="hero-atom-spin">
+                  <g
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    opacity="0.9"
+                  >
                     <ellipse cx="50" cy="50" rx="31" ry="13"></ellipse>
-                  </g>
-                  <g transform="rotate(-60 50 50)">
-                    <ellipse cx="50" cy="50" rx="31" ry="13"></ellipse>
+                    <g transform="rotate(60 50 50)">
+                      <ellipse cx="50" cy="50" rx="31" ry="13"></ellipse>
+                    </g>
+                    <g transform="rotate(-60 50 50)">
+                      <ellipse cx="50" cy="50" rx="31" ry="13"></ellipse>
+                    </g>
                   </g>
                 </g>
-              </g>
-              <circle class="hero-atom-core-ring" cx="50" cy="50" r="10"></circle>
-              <circle class="hero-atom-core" cx="50" cy="50" r="5.5"></circle>
-            </svg>
-            <span class="hero-title-brand">weekend</span>&nbsp;<span class="vd-text-muted"
-              >web labs</span
-            >
-          </h2>
+                <circle class="hero-atom-core-ring" cx="50" cy="50" r="10"></circle>
+                <circle class="hero-atom-core" cx="50" cy="50" r="5.5"></circle>
+              </svg>
+              <span class="hero-title-line">
+                <span class="hero-title-brand">weekend</span>&nbsp;<span class="vd-text-muted"
+                  >web labs</span
+                >
+              </span>
+            </h2>
+            <p class="hero-subtitle">experimental by design</p>
+          </div>
         </section>
       </div>
 
@@ -359,11 +355,11 @@ watch(demoSlug, (slug) => {
               </p>
               <h2 class="labs-about-title">A small playground for curious builds</h2>
               <p class="labs-about-lede">
-                Weekend Web Labs is where we ship ideas before they are polished—interactive demos,
+                Weekend Web Labs is where I ship ideas before they are polished—interactive demos,
                 odd widgets, and half-serious prototypes that might graduate into the framework, or
-                might just make us smile. Most demos are not guaranteed stable; that is the point.
-                Some components, like <code>wwl-hybrid-search</code>, are experimental prototypes
-                that may graduate into the framework.
+                might just be cool to try or play with. Most demos are not guaranteed stable; that
+                is the point. Some components, like <code>wwl-hybrid-search</code>, are experimental
+                prototypes that may graduate into the framework.
               </p>
               <div class="labs-about-grid">
                 <div class="labs-about-tile">
@@ -373,7 +369,7 @@ watch(demoSlug, (slug) => {
                   </h3>
                   <p class="vd-text-muted">
                     Grids, search, and UI experiments invite you to click, drag, and break
-                    assumptions safely. If something misbehaves, we have learned something useful.
+                    assumptions safely. If something misbehaves, I have learned something useful.
                   </p>
                 </div>
                 <div class="labs-about-tile">
@@ -382,7 +378,7 @@ watch(demoSlug, (slug) => {
                     <span>Fun is a feature</span>
                   </h3>
                   <p class="vd-text-muted">
-                    We keep the tone light on purpose: exploration should feel inviting, not like
+                    I keep the tone light on purpose: exploration should feel inviting, not like
                     reading a spec sheet. The GLaDOS jokes are optional; the curiosity is not.
                   </p>
                 </div>
@@ -390,7 +386,7 @@ watch(demoSlug, (slug) => {
               <div class="labs-about-cta">
                 <a href="#demos" class="vd-btn vd-btn-outline">Open live demos</a>
                 <span class="labs-about-cta-note vd-text-sm vd-text-muted"
-                  >Hybrid search, AI chat, and whatever we wire up next.</span
+                  >Hybrid search, AI chat, and whatever I wire up next.</span
                 >
               </div>
             </VdCard>
@@ -486,9 +482,12 @@ watch(demoSlug, (slug) => {
                   movable controls.</span
                 >
                 <span class="labs-demo-card-source">Source: local Hex Earth package</span>
-                <span class="labs-demo-card-badge-row"
-                  ><span class="labs-demo-card-badge">Local preview</span></span
-                >
+                <span class="labs-demo-card-badge-row">
+                  <span class="labs-demo-card-badge">Experimental</span>
+                  <span class="labs-demo-card-badge labs-demo-card-badge-version">{{
+                    hexEarthVersion
+                  }}</span>
+                </span>
               </button>
             </div>
 
@@ -588,19 +587,16 @@ watch(demoSlug, (slug) => {
 </template>
 
 <style scoped>
+.labs-main-shell.is-hex-earth {
+  padding: 0;
+  min-height: 100dvh;
+}
 .wwl-earth-stage {
   position: fixed;
   z-index: 2;
-  inset: var(--labs-dock-edge-pad-top, 0) var(--labs-dock-edge-pad-right, 0)
-    var(--labs-dock-edge-pad-bottom, 0) var(--labs-dock-edge-pad-left, 0);
+  inset: 0;
+  display: flex;
+  flex-direction: column;
   background: var(--vd-bg-primary);
-  padding-top: 28px;
-}
-.wwl-earth-back {
-  position: absolute;
-  left: 12px;
-  top: 3px;
-  font-size: 13px;
-  color: var(--text-primary);
 }
 </style>
