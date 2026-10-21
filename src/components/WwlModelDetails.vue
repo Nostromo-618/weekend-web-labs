@@ -11,7 +11,8 @@ const model = computed(() => getModelOption(props.modelId));
       {{ model.purpose || model.tier }} {{ model.experimental ? 'Experimental candidate.' : '' }}
     </p>
     <p>
-      {{ localDemoChoiceLabel(getModelChoiceLabel(model)) }} · {{ model.precision || 'Web build' }} ·
+      {{ localDemoChoiceLabel(getModelChoiceLabel(model)) }} ·
+      {{ model.precision || 'Web build' }} ·
       {{ model.license || 'See model licence' }}
     </p>
     <p v-if="model.toolCalling">
