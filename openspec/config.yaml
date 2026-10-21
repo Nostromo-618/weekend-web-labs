@@ -5,26 +5,23 @@ context: |
 
   Naming (labs-owned):
   - Prefix labs UI/components/CSS/product ids with `wwl` / `Wwl` / `wwl-`
-    (e.g. WwlAiChatUI, WwlHybridSearchUI, .wwl-ai-*, .wwl-neptune-*, wwl-ai-chat).
+    (e.g. WwlAiChatUI, .wwl-ai-*, wwl-ai-chat).
   - Do NOT rename `@vanduo-oss/vd3` or its design-system API (`VdButton`, `VdCard`,
     `VdModal`, `--vd-*` tokens, `.vd-btn` / `.vd-glass` / etc.). Those stay `vd` / `Vd`.
-  - Do NOT rewrite vd3-docs corpus content in `data/search-index.json` / fixtures.
 
   Architecture:
-  - Engines come from npm: `@wwl/wwl-hybrid-search` (`HybridSearch`) and
-    `@wwl/wwl-ai-chat` (`AiChat` + markdown). Labs does NOT publish engines
-    and MUST NOT reintroduce local engine SoT forks.
+  - Engines come from sibling packages: `@wwl/wwl-ai-chat` (`AiChat` + markdown).
+    Labs does NOT publish engines and MUST NOT reintroduce local engine SoT forks.
   - Labs Vue shell: Vite + Vue 3 + `@vanduo-oss/vd3` (`src/App.vue`, `src/components/Wwl*.vue`).
-  - Guardrails: package subpaths (`…/guardrails/llm`, `…/guardrails/search`, …).
-  - Default AI path: LiteRT Gemma (WebLLM fallback). Inject `loadLiteRT` / `loadFuse` /
+  - Guardrails: package subpaths (`…/guardrails/llm`, …).
+  - Default AI path: LiteRT Gemma (WebLLM fallback). Inject `loadLiteRT` /
     `loadTransformers` in demos. Local model mirrors under `.models/` (dev-served at
     `/models/…`; never ship into dist). Fetch with `pnpm models:fetch`.
-  - Hybrid corpus: regenerate with `pnpm index` (`utils/hybrid-search-indexer.mjs`).
 
   Key paths:
-  - UI: `src/components/WwlAiChatUI.vue`, `src/components/WwlHybridSearchUI.vue`
-  - Docs: `doc/wwl-hybrid-search.md`, `doc/wwl-ai-chat.md`, `doc/wwl-guardrails.md`, `README.md`
-  - Tests: `tests/unit/*.spec.ts`, `tests/e2e/wwl-neptune-search.spec.ts` (Playwright)
+  - UI: `src/components/WwlAiChatUI.vue`
+  - Docs: `doc/wwl-ai-chat.md`, `doc/wwl-guardrails.md`, `README.md`
+  - Tests: `tests/unit/*.spec.ts`, `tests/e2e/*.spec.ts` (Playwright)
   - Demos: `demo/*`, `src/demos/*`
 
   Testing: `pnpm test` (Playwright). Prefer focused unit specs when changing demos/harnesses.

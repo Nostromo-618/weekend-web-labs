@@ -33,7 +33,7 @@ export const DISCLAIMER_SECTIONS = [
   },
   {
     heading: 'As-is — no warranties',
-    body: 'The site, demos, tools, documentation, AI chat answers, search results, and related materials are provided free of charge, “as is,” without warranties of any kind — express or implied — including merchantability, fitness for a particular purpose, accuracy, completeness, or uninterrupted availability. Experimental APIs are for exploration only — not a stable production surface.',
+    body: 'The site, demos, tools, documentation, AI chat answers, and related materials are provided free of charge, “as is,” without warranties of any kind — express or implied — including merchantability, fitness for a particular purpose, accuracy, completeness, or uninterrupted availability. Experimental APIs are for exploration only — not a stable production surface.',
   },
   {
     heading: 'Limitation of liability',

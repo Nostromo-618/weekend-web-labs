@@ -32,7 +32,7 @@ Device and storage details are expandable. Browser-reported memory is approximat
 
 Stop cancels generation. Reset, model switching, and route exit invalidate late output and release runtime resources. Only one operation may generate at a time. Context budgeting reserves response space, preserves system instructions and recent complete turns, and discloses omitted older context while retaining the visible transcript.
 
-Chat uses one visible transcript and model history. Standalone documentation search is available in its own demo.
+Chat uses one visible transcript and model history.
 
 Chat and Compare default to remembered **Checked live text** under **Text replies**. The delivery gate checks the accumulated visible answer before releasing a cumulative plain-text preview, retaining trailing context and normally releasing at sentence/paragraph boundaries. Long pending text may release at a complete-word boundary. Short replies can finish without a preview. Markdown and validated links activate only after final acceptance.
 

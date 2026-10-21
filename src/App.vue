@@ -9,7 +9,6 @@ import {
   watch,
 } from 'vue';
 import { VdCard, VdIcon } from '@vanduo-oss/vd3';
-import { DEFAULT_DOCS_BASE_URL, WWL_HYBRID_SEARCH_VERSION } from '@wwl/wwl-hybrid-search';
 import { WWL_AI_CHAT_VERSION } from '@wwl/wwl-ai-chat';
 import { renderDocumentation } from '../utils/documentation.mjs';
 import { publicUrl } from './lib/public-url.js';
@@ -24,7 +23,6 @@ import {
 import LabsSiteDock from './components/LabsSiteDock.vue';
 import LabsDisclaimerGate from './components/LabsDisclaimerGate.vue';
 import LabsFarewell from './components/LabsFarewell.vue';
-import WwlHybridSearchUI from './components/WwlHybridSearchUI.vue';
 import WwlChatWorkbench from './components/WwlChatWorkbench.vue';
 import WwlHomeAtmosphere from './components/WwlHomeAtmosphere.vue';
 import WidgetsLanding from './components/widgets/WidgetsLanding.vue';
@@ -38,15 +36,13 @@ const HexEarthDemo = defineAsyncComponent(async () => {
   await import('@wwl/wwl-hex-earth/style.css');
   return mod.WwlHexEarthDemo;
 });
-const DEMO_SLUGS = new Set(['neptune', 'aichat', 'hex-earth']);
+const DEMO_SLUGS = new Set(['aichat', 'hex-earth']);
 const WIDGET_SLUGS = new Set(['draw', 'hex', 'code-editor', 'music-player']);
 const ROUTES = ['home', 'about', 'demos', 'widgets'];
-const DOCS_BASE_URL = DEFAULT_DOCS_BASE_URL;
 
 /** @typedef {'gate' | 'farewell' | 'accepted'} ConsentView */
 
 const COMPONENT_VERSION_MAP = {
-  neptune: WWL_HYBRID_SEARCH_VERSION,
   aichat: WWL_AI_CHAT_VERSION,
 };
 
@@ -65,12 +61,11 @@ const showFarewell = computed(() => consentHydrated.value && consentView.value =
 const appUnlocked = computed(() => consentHydrated.value && consentView.value === 'accepted');
 const hexEarthActive = computed(() => route.value === 'demos' && demoSlug.value === 'hex-earth');
 
-const docHtmlCache = { neptune: null, aichat: null };
+const docHtmlCache = { aichat: null };
 let docLoadSeq = 0;
 /** Empty until first hash sync so the initial route change scrolls to top. */
 let lastTopLevelRoute = '';
 
-const neptuneVersion = computed(() => `v${COMPONENT_VERSION_MAP.neptune}`);
 const aichatVersion = computed(() => `v${COMPONENT_VERSION_MAP.aichat}`);
 const hexEarthVersion = computed(() => 'v0.1.0');
 
@@ -141,8 +136,9 @@ function parseLabsHash() {
 }
 
 async function fetchDocumentationHtml(slug) {
+  if (slug !== 'aichat') return '';
   if (docHtmlCache[slug]) return docHtmlCache[slug];
-  const path = slug === 'neptune' ? '/doc/wwl-hybrid-search.md' : '/doc/wwl-ai-chat.md';
+  const path = '/doc/wwl-ai-chat.md';
   const res = await fetch(publicUrl(path), { credentials: 'same-origin' });
   if (!res.ok) throw new Error(`Could not load documentation (${res.status})`);
   const md = hydrateComponentVersionTokens(await res.text(), slug);
@@ -151,7 +147,7 @@ async function fetchDocumentationHtml(slug) {
 }
 
 async function loadDocumentationForSlug(slug) {
-  if (slug === 'hex-earth') return;
+  if (slug !== 'aichat') return;
   const seq = ++docLoadSeq;
   docLoading.value = true;
   docError.value = '';
@@ -163,7 +159,7 @@ async function loadDocumentationForSlug(slug) {
   } catch (err) {
     if (seq !== docLoadSeq) return;
     docError.value =
-      'Documentation could not be loaded. Check that <code>doc/wwl-hybrid-search.md</code> and <code>doc/wwl-ai-chat.md</code> are present, serve this folder over HTTP (not file://), then refresh.';
+      'Documentation could not be loaded. Check that <code>doc/wwl-ai-chat.md</code> is present, serve this folder over HTTP (not file://), then refresh.';
     console.warn('[labs]', err);
   } finally {
     if (seq === docLoadSeq) docLoading.value = false;
@@ -198,7 +194,6 @@ function applyLabsRoute(nextRoute, nextDemoSlug, nextWidgetSlug) {
   if (nextRoute === 'demos') {
     if (nextDemoSlug) {
       const nameMap = {
-        neptune: 'wwl-hybrid-search',
         aichat: 'wwl-ai-chat',
       };
       liveRegionText.value =
@@ -358,8 +353,8 @@ watch(demoSlug, (slug) => {
                 Weekend Web Labs is where I ship ideas before they are polished—interactive demos,
                 odd widgets, and half-serious prototypes that might graduate into the framework, or
                 might just be cool to try or play with. Most demos are not guaranteed stable; that
-                is the point. Some components, like <code>wwl-hybrid-search</code>, are experimental
-                prototypes that may graduate into the framework.
+                is the point. Some components are experimental prototypes that may graduate into the
+                framework.
               </p>
               <div class="labs-about-grid">
                 <div class="labs-about-tile">
@@ -368,8 +363,8 @@ watch(demoSlug, (slug) => {
                     <span>Try things</span>
                   </h3>
                   <p class="vd-text-muted">
-                    Grids, search, and UI experiments invite you to click, drag, and break
-                    assumptions safely. If something misbehaves, I have learned something useful.
+                    Grids, chat, and UI experiments invite you to click, drag, and break assumptions
+                    safely. If something misbehaves, I have learned something useful.
                   </p>
                 </div>
                 <div class="labs-about-tile">
@@ -386,7 +381,7 @@ watch(demoSlug, (slug) => {
               <div class="labs-about-cta">
                 <a href="#demos" class="vd-btn vd-btn-outline">Open live demos</a>
                 <span class="labs-about-cta-note vd-text-sm vd-text-muted"
-                  >Hybrid search, AI chat, and whatever I wire up next.</span
+                  >AI chat, Hex Earth, and whatever I wire up next.</span
                 >
               </div>
             </VdCard>
@@ -409,37 +404,10 @@ watch(demoSlug, (slug) => {
             <div class="labs-page-header about-header">
               <h2 id="labs-demos-heading"><i class="ph ph-flask" aria-hidden="true"></i> Demos</h2>
               <p class="vd-text-lg vd-text-muted">
-                Live component demos — hybrid search, AI chat, and more.
+                Live component demos — AI chat, Hex Earth, and more.
               </p>
             </div>
             <div class="labs-demo-card-grid" role="list">
-              <button
-                type="button"
-                class="labs-demo-card"
-                id="labs-card-neptune"
-                data-demo-slug="neptune"
-                :class="{ 'is-selected': demoSlug === 'neptune' }"
-                :aria-pressed="demoSlug === 'neptune' ? 'true' : 'false'"
-                aria-controls="labs-demos-detail"
-                aria-describedby="labs-card-neptune-desc"
-                @click="selectDemo('neptune')"
-              >
-                <span class="labs-demo-card-icon" aria-hidden="true">
-                  <i class="ph ph-magnifying-glass" style="font-size: 3rem"></i>
-                </span>
-                <span class="labs-demo-card-title">wwl-hybrid-search</span>
-                <span class="labs-demo-card-desc" id="labs-card-neptune-desc"
-                  >In-browser hybrid fuzzy + semantic search over vd3 docs—no server required</span
-                >
-                <span class="labs-demo-card-source">Source: nostromo-618/weekend-web-labs</span>
-                <span class="labs-demo-card-badge-row">
-                  <span class="labs-demo-card-badge">Experimental</span>
-                  <span class="labs-demo-card-badge labs-demo-card-badge-version">{{
-                    neptuneVersion
-                  }}</span>
-                </span>
-              </button>
-
               <button
                 type="button"
                 class="labs-demo-card"
@@ -509,42 +477,14 @@ watch(demoSlug, (slug) => {
             >
               <div class="labs-demos-detail-header" id="labs-demos-detail-header">
                 <span class="labs-demo-card-icon" id="labs-demos-detail-icon" aria-hidden="true">
-                  <i
-                    v-if="demoSlug === 'neptune'"
-                    class="ph ph-magnifying-glass"
-                    style="font-size: 2.25rem"
-                  ></i>
-                  <i
-                    v-else-if="demoSlug === 'aichat'"
-                    class="ph ph-robot"
-                    style="font-size: 2.25rem"
-                  ></i>
+                  <i class="ph ph-robot" style="font-size: 2.25rem"></i>
                 </span>
-                <h2 id="labs-demos-detail-title">
-                  {{
-                    demoSlug === 'neptune'
-                      ? 'wwl-hybrid-search'
-                      : demoSlug === 'aichat'
-                        ? 'wwl-ai-chat'
-                        : 'Component'
-                  }}
-                </h2>
+                <h2 id="labs-demos-detail-title">wwl-ai-chat</h2>
               </div>
 
               <div class="labs-detail-stack-section">
                 <h3 id="labs-demo-heading">Demo</h3>
                 <div id="labs-demo-panel">
-                  <div
-                    class="labs-demo-panel-inner"
-                    id="labs-demo-neptune"
-                    :hidden="demoSlug !== 'neptune'"
-                  >
-                    <WwlHybridSearchUI
-                      v-if="demoSlug === 'neptune'"
-                      :base-url="DOCS_BASE_URL"
-                      placeholder="Search vd3 docs…"
-                    />
-                  </div>
                   <div
                     class="labs-demo-panel-inner"
                     id="labs-demo-aichat"

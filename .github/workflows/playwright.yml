@@ -37,13 +37,6 @@ jobs:
           ref: main
           path: wwl-cbun
 
-      - name: Checkout wwl-hybrid-search
-        uses: actions/checkout@v7
-        with:
-          repository: nostromo-618/wwl-hybrid-search
-          ref: main
-          path: wwl-hybrid-search
-
       - name: Checkout wwl-ai-chat
         uses: actions/checkout@v7
         with:
@@ -71,14 +64,13 @@ jobs:
           cache-dependency-path: |
             weekend-web-labs/pnpm-lock.yaml
             wwl-cbun/pnpm-lock.yaml
-            wwl-hybrid-search/pnpm-lock.yaml
             wwl-ai-chat/pnpm-lock.yaml
             wwl-hex-earth/pnpm-lock.yaml
 
       - name: Install and build Labs siblings
         working-directory: ${{ github.workspace }}
         run: |
-          for pkg in wwl-cbun wwl-hybrid-search wwl-ai-chat wwl-hex-earth; do
+          for pkg in wwl-cbun wwl-ai-chat wwl-hex-earth; do
             echo "::group::Build $pkg"
             if [ "$pkg" = wwl-hex-earth ]; then
               # The pinned Git dependency needs its allowlisted prepack build.

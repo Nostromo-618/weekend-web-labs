@@ -79,23 +79,14 @@ function localModelsPlugin(preview = false) {
 
 const vdlCbunAlias = useLocalVdlCbun
   ? {
-      '@wwl/wwl-cbun/code-editor/css': path.join(
-        vdlCbunDist,
-        'code-editor/vd3-code-editor.css',
-      ),
-      '@wwl/wwl-cbun/code-editor/highlight': path.join(
-        vdlCbunDist,
-        'code-editor/highlight.js',
-      ),
+      '@wwl/wwl-cbun/code-editor/css': path.join(vdlCbunDist, 'code-editor/vd3-code-editor.css'),
+      '@wwl/wwl-cbun/code-editor/highlight': path.join(vdlCbunDist, 'code-editor/highlight.js'),
       '@wwl/wwl-cbun/code-editor': path.join(vdlCbunDist, 'code-editor'),
       '@wwl/wwl-cbun/draw/css': path.join(vdlCbunDist, 'draw/vd3-draw.css'),
       '@wwl/wwl-cbun/draw': path.join(vdlCbunDist, 'draw'),
       '@wwl/wwl-cbun/hex-grid/hex-math': path.join(vdlCbunDist, 'hex-grid/hex-math.js'),
       '@wwl/wwl-cbun/hex-grid': path.join(vdlCbunDist, 'hex-grid'),
-      '@wwl/wwl-cbun/music-player/css': path.join(
-        vdlCbunDist,
-        'music-player/vd3-music-player.css',
-      ),
+      '@wwl/wwl-cbun/music-player/css': path.join(vdlCbunDist, 'music-player/vd3-music-player.css'),
       '@wwl/wwl-cbun/music-player': path.join(vdlCbunDist, 'music-player'),
       '@wwl/wwl-cbun': vdlCbunDist,
     }
@@ -141,7 +132,6 @@ export default defineConfig(({ command, mode }) => ({
       input: {
         main: path.resolve(root, 'index.html'),
         'ai-chat-demo': path.resolve(root, 'demo/ai-chat-demo.html'),
-        'hybrid-search-demo': path.resolve(root, 'demo/hybrid-search-demo.html'),
         ...(mode === 'qa'
           ? {
               'model-eval-harness': path.resolve(root, 'demo/model-eval-harness.html'),

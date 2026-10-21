@@ -105,8 +105,6 @@ export function staticAssetsPlugin({ root, litertRoot, ortRoot }) {
         await fs.promises.copyFile(source, destination);
       }
       for (const [source, destination] of [
-        ['data/search-manifest.json', 'data/search-manifest.json'],
-        ['data/search', 'data/search'],
         ['doc', 'doc'],
         ['favicon.svg', 'favicon.svg'],
       ])

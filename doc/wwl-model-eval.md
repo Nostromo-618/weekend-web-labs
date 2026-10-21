@@ -20,7 +20,7 @@ The suite retains branding, honesty, and strict instruction checks, adding arith
 
 Strict answer checks deliberately count extra punctuation or different words as failures. Lifecycle checks include actual cancellation and history preservation; recovery and warm replies also have exact-word checks, so a wording failure must be distinguished from a runtime failure. All failed cases remain in the report. A single run is a smoke evaluation, not a statistically stable model-quality estimate.
 
-Real production inference is checked separately with `node utils/production-chat-qa.mjs` against port 4173; `PRODUCTION_CHAT_MODEL` selects a model and `PRODUCTION_CHAT_BROWSER` can isolate a browser. That runner uses installed Chrome and Playwright WebKit without WebGPU override flags. Production embedding/CSP checks use `node utils/production-refresh-qa.mjs`.
+Real production inference is checked separately with `node utils/production-chat-qa.mjs` against port 4173; `PRODUCTION_CHAT_MODEL` selects a model and `PRODUCTION_CHAT_BROWSER` can isolate a browser. That runner uses installed Chrome and Playwright WebKit without WebGPU override flags.
 
 Phone layout emulation, synthetic IME events, and simulated GPU loss do not replace physical mobile inference, operating-system keyboards, or actual device loss. The review report names unavailable checks.
 

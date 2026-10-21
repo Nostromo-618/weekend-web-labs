@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const HARNESS = '/tests/fixtures/neptune-harness.html';
+const HARNESS = '/tests/fixtures/blank-harness.html';
 
 test.describe('Guardrails Unit', () => {
   test.beforeEach(async ({ page }) => {
@@ -88,92 +88,6 @@ test.describe('Guardrails Unit', () => {
     expect(result.withExtra).toContain('Prefer short answers.');
     expect(result.withExtra.startsWith(result.constant.trim())).toBe(true);
     expect(result.withExtra).toContain(result.trailer.trim());
-  });
-
-  test('search query normalization and validation', async ({ page }) => {
-    const result = await page.evaluate(async () => {
-      const mod =
-        await import('/node_modules/@wwl/wwl-hybrid-search/dist/guardrails/search.js');
-      const normalized = mod.normalizeSearchQuery('   glass    button   docs   ');
-      const valid = mod.validateSearchQuery(normalized);
-      return { normalized, valid };
-    });
-    expect(result.normalized).toBe('glass button docs');
-    expect(result.valid.allowed).toBe(true);
-  });
-
-  test('search index validation rejects duplicate ids', async ({ page }) => {
-    const result = await page.evaluate(async () => {
-      const mod =
-        await import('/node_modules/@wwl/wwl-hybrid-search/dist/guardrails/search.js');
-      return mod.validateSearchIndexPayload({
-        documents: [
-          {
-            id: 'dup',
-            title: 'A',
-            category: 'Cat',
-            route: 'docs/a',
-            icon: 'ph-file-text',
-            keywords: [],
-            headings: [],
-            bodyText: 'hello',
-            classes: [],
-            chunks: [],
-          },
-          {
-            id: 'dup',
-            title: 'B',
-            category: 'Cat',
-            route: 'docs/b',
-            icon: 'ph-file-text',
-            keywords: [],
-            headings: [],
-            bodyText: 'world',
-            classes: [],
-            chunks: [],
-          },
-        ],
-      });
-    });
-    expect(result.allowed).toBe(false);
-    expect(result.code).toBe('search.index.duplicate_id');
-  });
-
-  test('vector validation rejects dimension mismatch', async ({ page }) => {
-    const result = await page.evaluate(async () => {
-      const mod =
-        await import('/node_modules/@wwl/wwl-hybrid-search/dist/guardrails/search.js');
-      return mod.validateVectorPayload({
-        documents: [
-          { id: 'a', embedding: [0.1, 0.2, 0.3] },
-          { id: 'b', embedding: [0.1, 0.2] },
-        ],
-      });
-    });
-    expect(result.allowed).toBe(false);
-    expect(result.code).toBe('search.vectors.dimension_mismatch');
-  });
-
-  test('safeDocHref supports path routes and rejects unsafe values', async ({ page }) => {
-    const result = await page.evaluate(async () => {
-      const mod =
-        await import('/node_modules/@wwl/wwl-hybrid-search/dist/guardrails/search.js');
-      const base = 'https://vanduo-oss.github.io/vd3-docs';
-      return {
-        path: mod.safeDocHref(base, '/components/button'),
-        home: mod.safeDocHref(base, '/'),
-        legacyHash: mod.safeDocHref(base, 'docs/buttons'),
-        badRoute: mod.safeDocHref(base, 'javascript:alert(1)'),
-        badPath: mod.safeDocHref(base, '/../etc/passwd'),
-        badBase: mod.safeDocHref('javascript:alert(1)', '/components/button'),
-      };
-    });
-    expect(result.path).toBe('https://vanduo-oss.github.io/vd3-docs/components/button');
-    expect(result.home).toBe('https://vanduo-oss.github.io/vd3-docs/');
-    expect(result.legacyHash).toBe('https://vanduo-oss.github.io/vd3-docs/#docs/buttons');
-    expect(result.badRoute).toBe('#');
-    expect(result.badPath).toBe('#');
-    expect(result.badBase).toBe('https://vd3.vanduo.dev/components/button');
   });
 
   test('AiChat headless generate blocks before model-load requirement', async ({ page }) => {

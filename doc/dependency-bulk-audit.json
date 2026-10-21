@@ -24,17 +24,6 @@
       "advisories": []
     },
     {
-      "project": "wwl-hybrid-search",
-      "counts": {
-        "info": 0,
-        "low": 0,
-        "moderate": 0,
-        "high": 0,
-        "critical": 0
-      },
-      "advisories": []
-    },
-    {
       "project": "wwl-cbun",
       "counts": {
         "info": 0,

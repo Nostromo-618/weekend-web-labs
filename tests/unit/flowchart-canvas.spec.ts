@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { shouldRegisterFlowchartTool } from '../../src/lib/flowchart-chat-mode.js';
 
-const HARNESS = '/tests/fixtures/neptune-harness.html';
+const HARNESS = '/tests/fixtures/blank-harness.html';
 
 test.describe('flowchart canvas mode', () => {
   test('registers the draw tool only while a diagram is on screen', () => {

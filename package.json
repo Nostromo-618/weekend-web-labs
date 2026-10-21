@@ -2,7 +2,7 @@
   "name": "@wwl/weekend-web-labs",
   "version": "0.1.1",
   "private": true,
-  "description": "Weekend Web Labs — demo playground for WWL engines and wwl-cbun widgets (hybrid search, AiChat, draw, hex, code editor, music player)",
+  "description": "Weekend Web Labs — demo playground for WWL engines and wwl-cbun widgets (AiChat, draw, hex, code editor, music player)",
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -17,7 +17,6 @@
     "weekend-web-labs",
     "labs",
     "demo",
-    "hybrid-search",
     "ai-chat",
     "model-eval"
   ],
@@ -27,7 +26,6 @@
     "build:qa": "vite build --mode qa",
     "preview": "vite preview",
     "demo:serve": "vite",
-    "index": "node utils/hybrid-search-indexer.mjs",
     "models:fetch": "node utils/fetch-ai-models.mjs",
     "speech:fetch": "node utils/fetch-speech-models.mjs",
     "docs:check": "node utils/check-chat-doc-links.mjs",
@@ -60,8 +58,6 @@
     "@wwl/wwl-ai-chat": "link:../wwl-ai-chat",
     "@wwl/wwl-cbun": "link:../wwl-cbun",
     "@wwl/wwl-hex-earth": "link:../wwl-hex-earth",
-    "@wwl/wwl-hybrid-search": "link:../wwl-hybrid-search",
-    "fuse.js": "7.5.0",
     "onnxruntime-web": "1.31.0-dev.20260914-8d85527a0",
     "phonemizer": "1.2.1",
     "vue": "3.5.43"

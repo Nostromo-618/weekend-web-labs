@@ -1,6 +1,6 @@
 # Compatible dependency bulk update and interaction fixes — 2026-10-04
 
-Follow-up to [the initial Labs dependency report](./dependency-refresh-2026-10-04.md). Updated **34 direct dependency versions** across four linked packages and refreshed their transitive dependencies. Labs already uses vd3 1.7.5 and current compatible registry dependencies from the preceding refresh.
+Follow-up to [the initial Labs dependency report](./dependency-refresh-2026-10-04.md). Updated **27 direct dependency versions** across the linked packages and refreshed their transitive dependencies. Labs already uses vd3 1.7.5 and current compatible registry dependencies from the preceding refresh.
 
 ## Editor and microphone
 
@@ -20,13 +20,6 @@ The actual Codex in-app browser returned `NotFoundError` on this machine. The UI
 | wwl-ai-chat       | eslint                    | ^10.8.0 | 10.12.0 |
 | wwl-ai-chat       | prettier                  | ^3.9.6  | 3.9.9   |
 | wwl-ai-chat       | typescript-eslint         | 8.62.0  | 8.71.0  |
-| wwl-hybrid-search | @huggingface/transformers | ^4.0.0  | 4.3.0   |
-| wwl-hybrid-search | @types/node               | 26.1.0  | 26.6.4  |
-| wwl-hybrid-search | @typescript-eslint/parser | 8.62.0  | 8.71.0  |
-| wwl-hybrid-search | eslint                    | ^10.8.0 | 10.12.0 |
-| wwl-hybrid-search | fuse.js                   | ^7.3.0  | ^7.5.0  |
-| wwl-hybrid-search | prettier                  | ^3.9.6  | 3.9.9   |
-| wwl-hybrid-search | typescript-eslint         | 8.62.0  | 8.71.0  |
 | wwl-cbun          | @typescript-eslint/parser | 8.69.0  | 8.71.0  |
 | wwl-cbun          | @vue/test-utils           | 2.5.0   | 2.5.1   |
 | wwl-cbun          | eslint                    | 10.10.0 | 10.12.0 |
@@ -51,7 +44,7 @@ The actual Codex in-app browser returned `NotFoundError` on this machine. The UI
 
 Registry outdated metadata supplied candidate versions; installs honored each project's existing 24-hour release age, trust, peer and lifecycle policies. Existing exact pins remain exact. No third-party release-age exception or global script enablement was added. Package-manager major changes remain excluded.
 
-Separate major migrations remain deferred: TypeScript 7; Vite 8 and Vitest 5 for AI Chat/Hybrid Search; jsdom 30 and Vitest 5 for CBUN. Hex Earth already used Vite 8, Vitest 5 and jsdom 30, so its updates stay within those majors. Later newly published releases remain subject to the normal age policy.
+Separate major migrations remain deferred: TypeScript 7; Vite 8 and Vitest 5 for AI Chat; jsdom 30 and Vitest 5 for CBUN. Hex Earth already used Vite 8, Vitest 5 and jsdom 30, so its updates stay within those majors. Later newly published releases remain subject to the normal age policy.
 
 ## Audit snapshot
 
@@ -59,7 +52,6 @@ Separate major migrations remain deferred: TypeScript 7; Vite 8 and Vitest 5 for
 | ------------- | ----------------------------- | ---------------------------- |
 | Labs          | 0 / 0 / 0                     | 0 / 0 / 0                    |
 | AI Chat       | 0 / 1 / 2                     | 0 / 0 / 0                    |
-| Hybrid Search | 0 / 1 / 2                     | 0 / 0 / 0                    |
 | CBUN          | 3 / 7 / 5                     | 0 / 0 / 1                    |
 | Hex Earth     | 0 / 0 / 0                     | 0 / 0 / 0                    |
 
@@ -68,11 +60,10 @@ The parser's brace-expansion, jsdom's undici and stylelint's fast-uri findings a
 ## Validation and limits
 
 - AI Chat: typecheck, lint, 146 unit tests and build passed.
-- Hybrid Search: typecheck, lint, 52 unit tests and build passed.
 - CBUN: 403 unit tests, declaration tests, stylelint, lint and build/export verification passed. ESLint retains five existing music-player warnings.
 - Hex Earth: typecheck, lint, 63 unit tests and both builds passed against the built local CBUN sibling.
 - Focused Labs speech, conversation and widget checks: all 102 covered cases passed across Chromium Desktop/WebKit Desktop, including corrected mock cleanup and a targeted successful rerun. Selection and microphone regression subset: 10 passed.
-- Existing chat lifecycle, comparison, offline search and Hex Earth route/layout checks: 24 passed across Chromium Desktop/WebKit Desktop.
+- Existing chat lifecycle, comparison, and Hex Earth route/layout checks: 24 passed across Chromium Desktop/WebKit Desktop.
 - Local Codex in-app browser verification: selection highlight is visible; missing-microphone explanation and paused state appear before model loading.
 - Labs production build and shipped asset/CSP validation passed. Labs ESLint has zero errors and ten existing draw warnings. OpenSpec strict validation passed.
 

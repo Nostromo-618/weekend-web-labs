@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const HARNESS = '/tests/fixtures/neptune-harness.html';
+const HARNESS = '/tests/fixtures/blank-harness.html';
 
 /**
  * LiteRT Cache Storage helpers — miss fetches once and puts; hit skips network.

@@ -135,36 +135,6 @@ test('actual Vue chat stops, resets, preserves General history, escapes HTML and
   await page.evaluate(() => window.chatQA.unmount());
   expect(await page.evaluate(() => window.chatQA.canceled)).toBeGreaterThan(0);
 });
-test('search works offline after index load with denied storage and no model download', async ({
-  page,
-  context,
-}, info) => {
-  const modelRequests = [];
-  page.on('request', (r) => {
-    if (/huggingface|onnx|webllm-wasm/.test(r.url())) modelRequests.push(r.url());
-  });
-  await page.addInitScript(() => {
-    Object.defineProperty(window, 'localStorage', {
-      get() {
-        throw new DOMException('Denied', 'SecurityError');
-      },
-    });
-  });
-  await page.goto('/demo/hybrid-search-demo.html');
-  const input = page.getByRole('combobox', { name: 'Search documentation' });
-  await expect(input).toBeVisible();
-  await input.fill('Dock');
-  await expect(page.locator('.wwl-neptune-result').first()).toContainText('Dock');
-  await context.setOffline(true);
-  await page.getByRole('combobox').first().selectOption('embeddinggemma');
-  await input.fill('Login');
-  await expect(page.locator('.wwl-neptune-result').first()).toContainText('Login');
-  expect(modelRequests).toEqual([]);
-  await page.screenshot({
-    path: path.join(shots, `${info.project.name}-search.png`),
-    fullPage: true,
-  });
-});
 test('missing WebGPU is explained before any download', async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'gpu', { value: undefined }));
   await page.goto('/demo/ai-chat-demo.html');

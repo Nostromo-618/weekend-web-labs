@@ -1,6 +1,6 @@
 # Weekend Web Labs
 
-Browser demos for this flock: widgets, hybrid search, on-device chat, and Hex Earth.
+Browser demos for this flock: widgets, on-device chat, and Hex Earth.
 
 Live: https://nostromo-618.github.io/weekend-web-labs/
 
@@ -10,7 +10,6 @@ Clone the siblings beside this repo and build them before Labs:
 parent/
   weekend-web-labs/
   wwl-cbun/            Vue widgets (code editor, draw, hex grid, music player)
-  wwl-hybrid-search/   headless fuzzy + semantic search
   wwl-ai-chat/         headless on-device chat and guardrails
   wwl-hex-earth/       hex-grid Earth
 ```

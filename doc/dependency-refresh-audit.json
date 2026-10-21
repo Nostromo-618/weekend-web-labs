@@ -70,63 +70,6 @@
       ]
     },
     {
-      "project": "wwl-hybrid-search",
-      "counts": {
-        "info": 0,
-        "low": 0,
-        "moderate": 1,
-        "high": 2,
-        "critical": 0
-      },
-      "advisories": [
-        {
-          "id": "GHSA-q2hr-2g5m-vwhr",
-          "severity": "moderate",
-          "module": "brace-expansion",
-          "patched": ">=5.0.12",
-          "findings": [
-            {
-              "version": "5.0.9",
-              "paths": [
-                ".>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion"
-              ]
-            }
-          ],
-          "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr"
-        },
-        {
-          "id": "GHSA-qhr7-859c-m2p7",
-          "severity": "high",
-          "module": "brace-expansion",
-          "patched": ">=5.0.11",
-          "findings": [
-            {
-              "version": "5.0.9",
-              "paths": [
-                ".>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion"
-              ]
-            }
-          ],
-          "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7"
-        },
-        {
-          "id": "GHSA-6j4f-fj2g-mc7p",
-          "severity": "high",
-          "module": "brace-expansion",
-          "patched": ">=5.0.10",
-          "findings": [
-            {
-              "version": "5.0.9",
-              "paths": [
-                ".>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion"
-              ]
-            }
-          ],
-          "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p"
-        }
-      ]
-    },
-    {
       "project": "wwl-cbun",
       "counts": {
         "info": 0,

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const HARNESS = '/tests/fixtures/neptune-harness.html';
+const HARNESS = '/tests/fixtures/blank-harness.html';
 
 test.describe('AiChat tool calling', () => {
   test.beforeEach(async ({ page }) => {

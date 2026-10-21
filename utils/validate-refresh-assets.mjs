@@ -1,66 +1,21 @@
-/** Validate the local docs build, immutable indexes, and production runtime assets. */
+/** Validate production runtime assets and page CSP. */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
-import {
-  buildCanonicalCorpus,
-  hash,
-} from '../../wwl-hybrid-search/scripts/lib/canonical-index.mjs';
 
 const require = createRequire(import.meta.url);
-const sourceRoot = path.resolve(process.env.VD3_DOCS_ROOT || '../../vd3/vd3-docs');
 const read = (p) => fs.readFile(p);
 const json = async (p) => JSON.parse(await read(p));
-const manifest = await json('data/search-manifest.json');
-const index = await json(`data/${manifest.index}`);
-const compareCurrentDocs = !process.argv.includes('--shipped-only');
-let verifiedAnchors = 0;
-if (compareCurrentDocs) {
-  const fresh = await buildCanonicalCorpus({
-    sourceRoot,
-    input: path.join(sourceRoot, 'dist/search/search-index.json'),
-    htmlDir: path.join(sourceRoot, 'dist'),
-  });
-  assert.deepEqual(index, fresh, 'The corpus must exactly match the current local docs build.');
-}
-assert.equal(hash(await read(`data/${manifest.index}`)), manifest.indexHash);
-assert.equal(index.corpusHash, hash(JSON.stringify(index.documents)));
-if (compareCurrentDocs)
-  for (const doc of index.documents) {
-    const file = doc.route === '/' ? 'index.html' : `${doc.route.slice(1)}.html`;
-    const html = await fs.readFile(path.join(sourceRoot, 'dist', file), 'utf8');
-    for (const anchor of doc.anchors) {
-      assert(html.includes(`id="${anchor}"`) || html.includes(`id='${anchor}'`));
-      verifiedAnchors++;
-    }
-  }
-for (const preset of Object.values(manifest.presets)) {
-  const bytes = await read(`data/${preset.path}`);
-  assert.equal(hash(bytes), preset.hash);
-  const vectors = JSON.parse(bytes);
-  for (const field of ['model', 'dimensions', 'dtype', 'pooling', 'queryPrefix', 'documentPrefix'])
-    assert.equal(vectors[field], preset[field], field);
-  for (const field of ['corpusHash', 'sourceRevision', 'sourceContentHash'])
-    assert.equal(vectors[field], manifest[field], field);
-  assert.deepEqual(
-    vectors.documents.map((d) => d.id),
-    index.documents.map((d) => d.id),
-  );
-  for (const doc of vectors.documents) {
-    assert.equal(doc.embedding.length, preset.dimensions);
-    assert(doc.embedding.every(Number.isFinite));
-  }
-  assert.deepEqual(await read(`dist/data/${preset.path}`), bytes);
-}
-assert.deepEqual(
-  await read('dist/data/search-manifest.json'),
-  await read('data/search-manifest.json'),
-);
-assert.deepEqual(await read(`dist/data/${manifest.index}`), await read(`data/${manifest.index}`));
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
+const labsPkg = await json('package.json');
 const litertRoot = path.dirname(require.resolve('@litert-lm/core/package.json'));
-assert.equal((await json(path.join(litertRoot, 'package.json'))).version, '0.17.1');
+assert.equal(
+  (await json(path.join(litertRoot, 'package.json'))).version,
+  labsPkg.dependencies['@litert-lm/core'],
+);
 const runtimeFiles = await fs.readdir(path.join(litertRoot, 'wasm'));
 for (const file of runtimeFiles)
   assert.deepEqual(
@@ -109,7 +64,7 @@ assert(
   files.some((f) => /webllm-worker.*\.js$/.test(f)),
   'WebLLM worker must be a bundled file.',
 );
-for (const page of ['index.html', 'demo/ai-chat-demo.html', 'demo/hybrid-search-demo.html']) {
+for (const page of ['index.html', 'demo/ai-chat-demo.html']) {
   const html = await fs.readFile(`dist/${page}`, 'utf8');
   assert(html.includes('Content-Security-Policy'));
   const scripts = html.match(/script-src ([^;]+)/)?.[1];
@@ -118,14 +73,6 @@ for (const page of ['index.html', 'demo/ai-chat-demo.html', 'demo/hybrid-search-
   assert(!scripts?.includes("'unsafe-inline'"));
 }
 const report = {
-  corpusScope: compareCurrentDocs ? 'current-local-docs' : 'shipped-pinned-corpus',
-  routes: index.documents.length,
-  verifiedAnchors,
-  generation: manifest.generation,
-  sourceRevision: manifest.sourceRevision,
-  sourceContentHash: manifest.sourceContentHash,
-  presets: manifest.presets,
-  allHashesMatch: true,
   production: {
     runtimeFiles,
     webllm: wasmManifest,
@@ -133,10 +80,9 @@ const report = {
     restrictiveScriptCsp: true,
   },
 };
+await fs.mkdir('qa/local-refresh', { recursive: true });
 await fs.writeFile(
   'qa/local-refresh/asset-validation.json',
   `${JSON.stringify(report, null, 2)}\n`,
 );
-console.log(
-  `Validated ${report.routes} routes, ${verifiedAnchors} anchors, both presets and production assets.`,
-);
+console.log('Validated production runtime assets and script CSP.');

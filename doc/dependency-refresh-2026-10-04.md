@@ -2,7 +2,7 @@
 
 Follow-up: [compatible bulk updates and interaction fixes](./dependency-bulk-update-2026-10-04.md) now update the linked siblings and supersede their audit findings below. This report records the initial Labs-only refresh.
 
-Labs now uses vd3 1.7.5 and offers General chat only. Dictation, read-aloud, Conversation Mode, model comparison and standalone documentation search remain available. The public AiChat API and sibling source packages were not changed.
+Labs now uses vd3 1.7.5 and offers General chat only. Dictation, read-aloud, Conversation Mode, and model comparison remain available. The public AiChat API and sibling source packages were not changed.
 
 ## Dependencies reviewed
 
@@ -27,7 +27,6 @@ Registry metadata and `pnpm outdated --format json` were checked on 2026-10-04. 
 | vite                          | 8.2.1                          | **8.3.2**                                                                       |
 | vite-plugin-static-copy       | 4.1.1                          | **Removed**; latest release still includes the vulnerable chain                 |
 | @wwl/wwl-ai-chat       | Local link, 0.1.1              | Retained local package; audited separately                                      |
-| @wwl/wwl-hybrid-search | Local link, 0.2.0              | Retained local package; audited separately                                      |
 | @wwl/wwl-cbun          | Local link, 1.0.0              | Retained local package; audited separately                                      |
 | @wwl/wwl-hex-earth     | Local link, 0.1.0              | Retained local package; audited separately                                      |
 
@@ -37,7 +36,7 @@ pnpm was updated within the existing major from 10.28.2 to **10.34.6**. Registry
 
 Before: Labs audit reported **one high advisory** in `vite-plugin-static-copy → chokidar → braces@3.0.3`. [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) describes stack-exhaustion denial of service from deeply nested brace patterns and lists no patched version. This is a Node build-tool dependency path, not browser speech inference.
 
-The plugin was replaced with `utils/static-assets.mjs`, using fixed local file lists and Node filesystem APIs. There is no third-party glob parser in this asset path. Dev asset delivery uses an exact URL/file map; production copies match the served `/litert-wasm/`, `/transformers-wasm/` and `/data/` paths. Matching runtime files, search manifest/vector bytes, local executable delivery and production CSP were checked.
+The plugin was replaced with `utils/static-assets.mjs`, using fixed local file lists and Node filesystem APIs. There is no third-party glob parser in this asset path. Dev asset delivery uses an exact URL/file map; production copies match the served `/litert-wasm/` and `/transformers-wasm/` paths. Matching runtime files, local executable delivery and production CSP were checked.
 
 After: Labs audit reports **zero known advisories** across its 218 audited entries. This is an advisory snapshot, not proof of complete security. Install-script blocking, the 24-hour release delay, trust policy, exotic-source blocking, peer checks and existing vulnerability overrides remain configured. Only the explicitly requested `@vanduo-oss/vd3@1.7.5` was added to the existing workspace release-age exception.
 
@@ -46,7 +45,6 @@ Linked siblings have separate lockfiles and build processes, so a clean Labs aud
 | Separate project  | Low | Moderate | High | Findings / follow-up                                                                                                                                          |
 | ----------------- | --: | -------: | ---: | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | wwl-ai-chat       |   0 |        1 |    2 | TypeScript ESLint parser → minimatch → brace-expansion 5.0.9; update to 5.0.12                                                                                |
-| wwl-hybrid-search |   0 |        1 |    2 | Same parser dependency; update to 5.0.12                                                                                                                      |
 | wwl-cbun          |   3 |        7 |    5 | jsdom → undici 7.29.0 (fix ≥7.29.1), stylelint → fast-uri 3.1.7 (fix ≥3.1.8), parser → brace-expansion 5.0.9 (fix 5.0.12), stylelint → unpatched braces 3.0.3 |
 | wwl-hex-earth     |   0 |        0 |    0 | No known audit advisories                                                                                                                                     |
 
@@ -56,17 +54,15 @@ Those paths originate in sibling development tools; they are not installed by La
 
 Removed the General/Docs selector, Docs semantic controls, retrieval and insufficient-evidence branches, citation processing/list UI, separate mode histories, Docs evaluation scopes/cases, and Docs-specific tests. Compare now owns two General histories; its exports use **schema 2** with `turns: [paneA, paneB]`, without `mode`/`modes` or citations. Report renderers and consumers use this shape. Suspend/reload preserves each pane's independent history.
 
-`docs-search.js` now only provides the standalone search runtime/presets. The search corpus and vectors were preserved. Labs reports installed injected chat runtime versions rather than older catalog defaults.
+Labs reports installed injected chat runtime versions rather than older catalog defaults.
 
 ## Validation
 
-- **134 focused checks passed** in Playwright Chromium Desktop and WebKit Desktop: General chat lifecycle, IME/HTML escaping, no chat retrieval requests, speech, Conversation Mode, comparison, model evaluation and search. Final strengthened history/reload/schema checks passed in both browsers (8 comparison checks; remaining paired evaluation checks passed).
+- **134 focused checks passed** in Playwright Chromium Desktop and WebKit Desktop: General chat lifecycle, IME/HTML escaping, no chat retrieval requests, speech, Conversation Mode, comparison, and model evaluation. Final strengthened history/reload/schema checks passed in both browsers (8 comparison checks; remaining paired evaluation checks passed).
 - **5 actual-model checks passed** in installed Chrome 154: three Gemma E2B/Whisper/Silero/Kokoro turns, cached offline operation, non-silent Web Audio playback, silence/noise handling, Whisper round-trip, microphone resampling/release and no recording/transcript uploads. Models used the existing local mirrors; this refresh did not repeat cold remote speech-download measurements.
 - Conversation silence-to-submit: **2.30–2.36 s**; silence-to-first-audio: **4.66–8.14 s** over three turns. These are observations on this machine, not cross-device guarantees. Worker WASM and GPU allocations are not included in main-thread heap readings.
 - Real LFM2.5 causal chat completed a guarded answer and committed a two-message history using Transformers 4.3.0.
-- Production semantic search: **MiniLM and EmbeddingGemma ready in Chrome**, **MiniLM ready in Playwright WebKit**, with results and no page errors or CSP violations.
-- Production build passed. `node utils/validate-refresh-assets.mjs --shipped-only` verified hashes/vector consistency for the existing 92-route pinned corpus, matching runtime files, QA/model exclusion and script CSP. This checks the shipped corpus independently of a newer sibling docs build.
-- The full default asset validator initially detected that the preserved search corpus differs from the current local vd3 docs build. Corpus regeneration and current-docs anchor parity remain a separate index refresh; the default validator still enforces those checks. No corpus content was silently regenerated here.
+- Production build passed. Runtime files, QA/model exclusion, and script CSP were checked.
 - ESLint: zero errors, 10 existing warnings in draw-stencils/draw-tools. Changed code formatted; OpenSpec strict validation passed.
 - Actual-model Safari/Firefox speech certification was not added by this change.
 

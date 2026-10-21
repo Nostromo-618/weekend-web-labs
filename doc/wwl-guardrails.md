@@ -2,10 +2,7 @@
 
 Canonical documentation for FOSS guardrails consumed from linked WWL sibling packages (not a labs-owned source tree).
 
-This module family centralizes deterministic validation and safety composition used across:
-
-- `wwl-ai-chat`
-- `wwl-hybrid-search` (`@wwl/wwl-hybrid-search`)
+This module family centralizes deterministic validation and safety composition used by `wwl-ai-chat`.
 
 ## Purpose and Scope
 
@@ -19,7 +16,7 @@ Package guardrail subpaths exist to provide a single, reusable policy layer that
 
 ### `@wwl/wwl-ai-chat` / core helpers
 
-Shared contracts and helpers used by both LLM and search guardrails:
+Shared contracts and helpers used by LLM guardrails:
 
 - `normalizeText(value)`
 - `allow(meta?)`
@@ -47,19 +44,6 @@ Tool-call validation and XML fallback protocol helpers:
 - `formatXmlToolResult(name, result)`
 - `DEFAULT_MAX_TOOL_ARGS_BYTES`
 
-### `@wwl/wwl-hybrid-search/guardrails/search`
-
-Search-specific deterministic hardening used by hybrid search demos:
-
-- `normalizeSearchQuery(query, options?)`
-- `validateSearchQuery(query, options?)`
-- `validateSearchIndexDocument(doc)`
-- `validateSearchIndexPayload(payload, options?)`
-- `validateVectorPayload(payload, options?)`
-- `safeDocHref(baseUrl, route)`
-- `sanitizeIconClass(icon)`
-- `searchGuardrails`
-
 ## Threat Model Split
 
 Guardrails are intentionally split by runtime behavior and risk surface.
@@ -67,10 +51,6 @@ Guardrails are intentionally split by runtime behavior and risk surface.
 - **LLM guardrails (`llm.js`)**
   - Target instruction-following generators (`wwl-ai-chat`).
   - Combine deterministic input blocking (regex pattern matching, max length, empty checks) with system-prompt policy composition.
-- **Search guardrails (`search.js`)**
-  - Target retrieval/ranking workloads (`wwl-hybrid-search`).
-  - Focus on deterministic query hygiene, payload/schema validation, finite-vector checks, and render-path sanitization.
-  - Not framed as classic prompt-jailbreak defense, because semantic search is embedding extraction + ranking, not chat completion.
 
 ## API Reference
 
@@ -146,44 +126,6 @@ Preset objects that bundle:
 - `buildSystemPrompt`
 - `patterns`
 
-### Search helpers (`search.js`)
-
-#### `normalizeSearchQuery(query, options?): string`
-
-Normalizes and length-bounds query text.
-
-#### `validateSearchQuery(query, options?): GuardrailResult`
-
-Deterministically validates search query shape and quality.
-
-- empty
-- too short / too long
-- pathological repeated-character sequence
-
-#### `validateSearchIndexDocument(doc): GuardrailResult`
-
-Validates one index document’s required fields and safe route/icon constraints.
-
-#### `validateSearchIndexPayload(payload, options?): GuardrailResult`
-
-Validates index payload shape, document count limits, per-document validity, and duplicate IDs.
-
-#### `validateVectorPayload(payload, options?): GuardrailResult`
-
-Validates vector payload shape, row count limits, embedding dimensions, and finite numeric values.
-
-#### `safeDocHref(baseUrl, route): string`
-
-Builds safe docs links. Falls back to `https://vanduo.dev` for unsafe base URLs and returns `#` for unsafe routes.
-
-#### `sanitizeIconClass(icon): string`
-
-Returns safe icon class, otherwise fallback `ph-file-text`.
-
-#### `searchGuardrails`
-
-Preset object bundling all search validation/sanitization helpers.
-
 ## Return Contracts and Error Behavior
 
 ### `GuardrailResult`
@@ -238,31 +180,6 @@ import { buildChatSystemPrompt } from '@wwl/wwl-ai-chat/guardrails/llm';
 const chatPrompt = buildChatSystemPrompt({
   extraRules: 'Prefer concise bullet points.',
 });
-```
-
-### Search index/vector validation at load time
-
-```javascript
-import {
-  validateSearchIndexPayload,
-  validateVectorPayload,
-} from '@wwl/wwl-hybrid-search/guardrails/search';
-import { toGuardrailError } from '@wwl/wwl-ai-chat'; /* or package core re-exports */
-
-const indexCheck = validateSearchIndexPayload(indexPayload);
-if (!indexCheck.allowed) throw toGuardrailError(indexCheck);
-
-const vectorCheck = validateVectorPayload(vectorPayload);
-if (!vectorCheck.allowed) throw toGuardrailError(vectorCheck);
-```
-
-### Safe link creation for UI render paths
-
-```javascript
-import { safeDocHref, sanitizeIconClass } from '@wwl/wwl-hybrid-search/guardrails/search';
-
-const href = safeDocHref('https://vanduo.dev', doc.route);
-const icon = sanitizeIconClass(doc.icon);
 ```
 
 ## Compatibility Notes

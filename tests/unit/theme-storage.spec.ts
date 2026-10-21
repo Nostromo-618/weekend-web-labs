@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('vd3 storagePrefix (wwl-)', () => {
   test('Labs bootstrap uses storagePrefix wwl- (no remapper shim)', async ({ page }) => {
-    await page.goto('/tests/fixtures/neptune-harness.html');
+    await page.goto('/tests/fixtures/blank-harness.html');
 
     const result = await page.evaluate(async () => {
       const mainSrc = await (await fetch('/src/main.js')).text();
@@ -40,7 +40,7 @@ test.describe('vd3 storagePrefix (wwl-)', () => {
 
 test.describe('vdl theme defaults', () => {
   test('exports Labs global themeDefaults for unset wwl-* prefs', async ({ page }) => {
-    await page.goto('/tests/fixtures/neptune-harness.html');
+    await page.goto('/tests/fixtures/blank-harness.html');
 
     const defaults = await page.evaluate(async () => {
       const mod = await import('/src/wwl-theme-defaults.js');
@@ -57,7 +57,7 @@ test.describe('vdl theme defaults', () => {
   });
 
   test('maps theme primary to VdDock surface tint tokens', async ({ page }) => {
-    await page.goto('/tests/fixtures/neptune-harness.html');
+    await page.goto('/tests/fixtures/blank-harness.html');
 
     const mapping = await page.evaluate(async () => {
       const mod = await import('/src/composables/useLabsDockTint.js');
@@ -78,7 +78,7 @@ test.describe('vdl theme defaults', () => {
   });
 
   test('exports Labs primary fan swatch keys (Ink + 12 hues)', async ({ page }) => {
-    await page.goto('/tests/fixtures/neptune-harness.html');
+    await page.goto('/tests/fixtures/blank-harness.html');
 
     const keys = await page.evaluate(async () => {
       const mod = await import('/src/labs-primary-swatches.js');
@@ -94,7 +94,7 @@ test.describe('vdl theme defaults', () => {
 
 test.describe('resolved theme (system → light|dark)', () => {
   test('resolveThemeScheme maps system via prefers-color-scheme', async ({ page }) => {
-    await page.goto('/tests/fixtures/neptune-harness.html');
+    await page.goto('/tests/fixtures/blank-harness.html');
 
     const light = await page.evaluate(async () => {
       const mod = await import('/src/wwl-resolved-theme.js');

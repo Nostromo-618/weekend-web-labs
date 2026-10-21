@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const HARNESS = '/tests/fixtures/neptune-harness.html';
+const HARNESS = '/tests/fixtures/blank-harness.html';
 
 test.describe('paired local chat session', () => {
   test.beforeEach(async ({ page }) => {

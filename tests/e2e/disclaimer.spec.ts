@@ -50,7 +50,7 @@ test.describe('Labs disclaimer gate', () => {
   });
 
   test('lib helpers persist versioned acceptance', async ({ page }) => {
-    await page.goto('/tests/fixtures/neptune-harness.html');
+    await page.goto('/tests/fixtures/blank-harness.html');
     const result = await page.evaluate(async () => {
       const mod = await import('/src/lib/disclaimer.js');
       const { TOC_VERSION } = await import('/src/content/disclaimer.js');

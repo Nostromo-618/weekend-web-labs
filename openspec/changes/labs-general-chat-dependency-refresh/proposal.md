@@ -3,7 +3,7 @@ Labs should consume vd3 1.7.5, simplify AI Chat to General only, and reduce depe
 
 ## What Changes
 - Remove Docs chat UI, retrieval, citation processing, mode histories, and evaluation cases from Labs Chat and Compare.
-- Preserve standalone hybrid search and the public AiChat API.
+- Preserve the public AiChat API.
 - Review all direct dependencies, update compatible releases, and replace the vulnerable static-copy plugin with fixed-path asset delivery.
 
 ## Capabilities

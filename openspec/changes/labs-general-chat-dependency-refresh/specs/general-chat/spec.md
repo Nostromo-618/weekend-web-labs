@@ -10,4 +10,4 @@ Labs SHALL use vd3 1.7.5, review all direct dependencies, and serve matching loc
 #### Scenario: Production build
 - **GIVEN** installed reviewed dependencies
 - **WHEN** Labs is built
-- **THEN** runtime WASM and standalone search assets are present, QA/model mirrors are excluded, and speech remains functional
+- **THEN** runtime WASM is present, QA/model mirrors are excluded, and speech remains functional
