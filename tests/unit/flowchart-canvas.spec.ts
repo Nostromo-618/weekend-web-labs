@@ -1,15 +1,23 @@
 import { test, expect } from '@playwright/test';
-import { shouldRegisterFlowchartTool } from '../../src/lib/flowchart-chat-mode.js';
+import {
+  flowchartChatOffered,
+  localDemoChoiceLabel,
+  shouldRegisterFlowchartTool,
+} from '../../src/lib/flowchart-chat-mode.js';
 
 const HARNESS = '/tests/fixtures/blank-harness.html';
 
 test.describe('flowchart canvas mode', () => {
-  test('registers the draw tool only while a diagram is on screen', () => {
+  test('does not offer flowchart editing to the on-device chat', () => {
     const diagram = { nodes: [{ id: 'start', text: 'Start' }], edges: [] };
+    expect(flowchartChatOffered()).toBe(false);
     expect(shouldRegisterFlowchartTool(true, null)).toBe(false);
     expect(shouldRegisterFlowchartTool(true, undefined)).toBe(false);
     expect(shouldRegisterFlowchartTool(false, diagram)).toBe(false);
-    expect(shouldRegisterFlowchartTool(true, diagram)).toBe(true);
+    expect(shouldRegisterFlowchartTool(true, diagram)).toBe(false);
+    expect(localDemoChoiceLabel('Gemma · LiteRT · 2000 MB · Tools available')).toBe(
+      'Gemma · LiteRT · 2000 MB · Diagram editing not offered',
+    );
   });
 
   test('closed canvas drops the flowchart tool and states that the canvas is off', async ({

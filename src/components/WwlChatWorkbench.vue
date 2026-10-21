@@ -14,6 +14,7 @@ import { useTooltips, VdTooltip } from '@vanduo-oss/vd3';
 import { VdFlowchart, FLOWCHART_DOCUMENT_VERSION } from '@vanduo-oss/vd3-flowchart';
 import '@vanduo-oss/vd3-flowchart/css';
 import { getModelOption } from '@wwl/wwl-ai-chat';
+import { flowchartChatOffered } from '../lib/flowchart-chat-mode.js';
 import WwlAiChatUI from './WwlAiChatUI.vue';
 import { captureFlowchartPng } from '../lib/flowchart-capture.js';
 import { readChatPreferences, saveChatPreferences } from '../lib/chat-preferences.js';
@@ -30,7 +31,8 @@ const view = ref('chat'),
   flowchartRoot = ref(null),
   flowchartEditor = ref(null),
   stageEl = ref(null),
-  flowchartOpen = ref(stored.flowchartOpen),
+  showFlowchartChat = flowchartChatOffered(),
+  flowchartOpen = ref(showFlowchartChat && stored.flowchartOpen),
   flowchartRatio = ref(stored.flowchartRatio),
   inspectorOpen = ref(stored.inspectorOpen),
   flowchartNotice = ref(''),
@@ -85,6 +87,7 @@ function onFlowchartRejected(message) {
   flowchartNotice.value = message || 'The flowchart update was rejected.';
 }
 function setFlowchartOpen(open) {
+  if (!showFlowchartChat) return;
   flowchartOpen.value = open;
   saveChatPreferences({ flowchartOpen: open });
 }
@@ -289,7 +292,7 @@ onBeforeUnmount(() => {
         Evaluate · local
       </button>
       <button
-        v-if="view === 'chat'"
+        v-if="showFlowchartChat && view === 'chat'"
         type="button"
         class="vd-btn"
         :class="flowchartOpen ? 'vd-btn-primary' : 'vd-btn-outline'"
@@ -309,7 +312,7 @@ onBeforeUnmount(() => {
     >
       <WwlAiChatUI
         ref="child"
-        :flowchart-document="flowchartOpen ? flowchartDocument : null"
+        :flowchart-document="showFlowchartChat && flowchartOpen ? flowchartDocument : null"
         :capture-flowchart="captureFlowchart"
         @model-change="selected = $event"
         @flowchart-document="onModelDocument"
@@ -332,7 +335,7 @@ onBeforeUnmount(() => {
         @keydown="onSplitterKeydown"
       ></div>
       <section
-        v-if="flowchartOpen"
+        v-if="showFlowchartChat && flowchartOpen"
         ref="flowchartRoot"
         class="wwl-flowchart-column"
         :class="{ 'is-inspector-hidden': !inspectorOpen }"

@@ -38,7 +38,7 @@ import {
 import { validateLlmInput } from '@wwl/wwl-ai-chat/guardrails/llm';
 import { toGuardrailError } from '@wwl/wwl-ai-chat';
 import { chatRuntimeOptions, clearChatCaches } from '../lib/chat-runtime.js';
-import { shouldRegisterFlowchartTool } from '../lib/flowchart-chat-mode.js';
+import { localDemoChoiceLabel, shouldRegisterFlowchartTool } from '../lib/flowchart-chat-mode.js';
 import { labsMarkdownToHtml } from '@wwl/wwl-ai-chat/markdown';
 
 const MODEL_CACHE_FLAG_PREFIX = 'wwl-ai-chat-model-cached:';
@@ -345,7 +345,8 @@ function buildOptionLabel(model, resolved) {
   if (resolved.loadBlocked) flags.push('Runtime unsupported');
   if (isModelLikelyCached(model.id)) flags.push('Cached');
   if (resolved.unavailable) flags.push('Unavailable');
-  return `${getModelChoiceLabel(model)}${flags.length ? ` — ${flags.join(' — ')}` : ''}`;
+  const choice = localDemoChoiceLabel(getModelChoiceLabel(model));
+  return `${choice}${flags.length ? ` — ${flags.join(' — ')}` : ''}`;
 }
 
 const selectedResolved = computed(() => resolveModelForSystem(selectedModelId.value));

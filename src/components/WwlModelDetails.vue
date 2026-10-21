@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { getModelOption, getModelChoiceLabel } from '@wwl/wwl-ai-chat';
+import { localDemoChoiceLabel } from '../lib/flowchart-chat-mode.js';
 const props = defineProps({ modelId: { type: String, default: '' } });
 const model = computed(() => getModelOption(props.modelId));
 </script>
@@ -10,7 +11,7 @@ const model = computed(() => getModelOption(props.modelId));
       {{ model.purpose || model.tier }} {{ model.experimental ? 'Experimental candidate.' : '' }}
     </p>
     <p>
-      {{ getModelChoiceLabel(model) }} · {{ model.precision || 'Web build' }} ·
+      {{ localDemoChoiceLabel(getModelChoiceLabel(model)) }} · {{ model.precision || 'Web build' }} ·
       {{ model.license || 'See model licence' }}
     </p>
     <p v-if="model.toolCalling">
@@ -19,10 +20,8 @@ const model = computed(() => getModelOption(props.modelId));
       >.
       {{
         model.capabilities?.tools
-          ? model.toolCalling?.integration === 'xml'
-            ? 'Tools can edit the flowchart through the XML protocol.'
-            : 'Available through the Gemma integration.'
-          : 'This model can read the flowchart but cannot change it.'
+          ? 'Diagram editing is not offered for this on-device model.'
+          : 'Tool calling is not enabled for this model.'
       }}
     </p>
     <p>

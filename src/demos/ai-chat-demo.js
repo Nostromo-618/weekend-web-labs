@@ -75,7 +75,7 @@ const DemoApp = {
                       'WebLLM (@mlc-ai/web-llm)',
                     ),
                   ]),
-                  ': Experimental Ministral 3 and Mistral 7B chat models for Chat and Compare (omitted from flowchart-interaction selection while Flowchart is open). Qwen3 0.6B is not offered.',
+                  ': Experimental Ministral 3 and Mistral 7B chat models for Chat and Compare. Qwen3 0.6B is not offered.',
                 ]),
                 h('li', [
                   h('strong', [

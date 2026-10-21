@@ -32,7 +32,8 @@ test('chat picker exposes retained families and explicit precision without downl
   await expect(picker).toHaveValue(primary[2]);
   await expect(precision).toHaveValue('LFM2.5-2.6B-q4-ONNX');
   await expect(picker.locator('option', { hasText: 'integration pending' })).toHaveCount(4);
-  await expect(picker.locator('option', { hasText: 'Tools available' })).toHaveCount(2);
+  await expect(picker.locator('option', { hasText: 'Diagram editing not offered' })).toHaveCount(2);
+  await expect(picker.locator('option', { hasText: 'Tools available' })).toHaveCount(0);
   await expect(picker.locator('option', { hasText: 'Candidate' })).toHaveCount(1);
   await expect(picker.locator('option', { hasText: 'Qwen' })).toHaveCount(0);
   await expect(page.getByText('Gemma 4 E2B is the default.')).toBeVisible();
@@ -59,7 +60,7 @@ test('Compare shares primary labels and precision choices without loading', asyn
   await page.locator('#wwl-compare-precision-1').selectOption('LFM2.5-2.6B-q4-ONNX');
   await expect(page.locator('#wwl-compare-model-1')).toHaveValue(primary[2]);
   await expect(
-    page.getByText('This model can read the flowchart but cannot change it.'),
+    page.getByText('Tool calling is not enabled for this model.'),
   ).toBeVisible();
 });
 
@@ -95,20 +96,15 @@ test('split unsafe output never reaches DOM, saved history or speech', async ({ 
   expect(spoken).toContain('help');
 });
 
-test('chat demo shows the flowchart canvas beside chat and omits non-tool models during flowchart interaction', async ({
-  page,
-}) => {
+test('chat demo does not offer flowchart editing for on-device Gemma', async ({ page }) => {
   await page.goto('/demo/ai-chat-demo.html');
-  const canvas = page.getByRole('region', { name: 'Flowchart canvas' });
-  const toggle = page.getByRole('button', { name: 'Flowchart', exact: true });
-  const splitter = page.getByRole('separator', { name: 'Resize chat and flowchart' });
-  await expect(canvas).toBeVisible();
-  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Flowchart', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Flowchart canvas' })).toHaveCount(0);
+  await expect(page.getByRole('separator', { name: 'Resize chat and flowchart' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Chat', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
-  await expect(page.getByRole('heading', { name: 'Inspector' })).toBeVisible();
   const settings = page.getByRole('button', { name: 'Settings', exact: true });
   if ((await settings.getAttribute('aria-expanded')) === 'false') await settings.click();
   const picker = page.locator('#wwl-ai-model-select');
@@ -116,52 +112,11 @@ test('chat demo shows the flowchart canvas beside chat and omits non-tool models
     await picker
       .locator('option')
       .evaluateAll((els) => els.map((el) => (el as HTMLOptionElement).value)),
-  ).toEqual(['gemma-4-E2B-it-web', 'gemma-4-E4B-it-web']);
-  const settingsDialog = page.getByRole('dialog', { name: 'Settings', exact: true });
-  if (await settingsDialog.isVisible())
-    await settingsDialog.getByRole('button', { name: 'Close', exact: true }).click();
-  const wide = (page.viewportSize()?.width || 0) > 900;
-  if (wide) {
-    await expect(splitter).toBeVisible();
-    const widthRatio = await page
-      .locator('.demo-chat-wrap')
-      .evaluate((el) => el.getBoundingClientRect().width / window.innerWidth);
-    expect(widthRatio).toBeGreaterThanOrEqual(0.88);
-    expect(widthRatio).toBeLessThanOrEqual(0.92);
-    const before = await page
-      .locator('.wwl-chat-stage')
-      .evaluate((el) => getComputedStyle(el).getPropertyValue('--wwl-chat-width').trim());
-    expect(before).toBe('30%');
-    const box = await splitter.boundingBox();
-    if (!box) throw new Error('Flowchart splitter has no box');
-    await page.mouse.move(box.x + box.width / 2, box.y + 40);
-    await page.mouse.down();
-    await page.mouse.move(box.x + 120, box.y + 40);
-    await page.mouse.up();
-    await expect
-      .poll(() =>
-        page
-          .locator('.wwl-chat-stage')
-          .evaluate((el) => getComputedStyle(el).getPropertyValue('--wwl-chat-width').trim()),
-      )
-      .not.toBe(before);
-  } else {
-    await expect(splitter).toHaveCount(0);
-  }
-  await page.getByRole('button', { name: 'Hide inspector', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Inspector' })).toBeHidden();
-  await page.getByRole('button', { name: 'Show inspector', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Inspector' })).toBeVisible();
-  await toggle.click();
-  await expect(canvas).toHaveCount(0);
-  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
-  if ((await settings.getAttribute('aria-expanded')) === 'false') await settings.click();
+  ).toEqual(primary);
+  await expect(page.getByText('Diagram editing is not offered for this on-device model.')).toBeVisible();
+  await expect(page.locator('.wwl-model-details')).not.toContainText('Tools available');
+  await expect(page.locator('.wwl-model-details')).toContainText('Diagram editing not offered');
   await expect(picker.locator('option')).toHaveCount(primary.length);
-  const openSettings = page.getByRole('dialog', { name: 'Settings', exact: true });
-  if (await openSettings.isVisible())
-    await openSettings.getByRole('button', { name: 'Close', exact: true }).click();
-  await toggle.click();
-  await expect(canvas).toBeVisible();
 });
 
 test('rejected input does not enter the transcript or engine callbacks', async ({ page }) => {
@@ -174,7 +129,7 @@ test('rejected input does not enter the transcript or engine callbacks', async (
   expect(await page.evaluate(() => window['chatQA'].calls)).toEqual([]);
 });
 
-test('chat with flowchart on main app shell utilizes up to 90 percent width and 30/70 split', async ({
+test('chat on the main app shell stays wide without a flowchart', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -191,12 +146,8 @@ test('chat with flowchart on main app shell utilizes up to 90 percent width and 
   );
   expect(widthRatio).toBeGreaterThanOrEqual(0.80);
   expect(widthRatio).toBeLessThanOrEqual(0.92);
-  const stage = page.locator('.wwl-chat-stage');
-  const chatWidth = await stage.evaluate((el) =>
-    getComputedStyle(el).getPropertyValue('--wwl-chat-width').trim(),
-  );
-  expect(chatWidth).toBe('30%');
-  const flowchart = page.getByRole('region', { name: 'Flowchart canvas' });
-  await expect(flowchart).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Flowchart canvas' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Flowchart', exact: true })).toHaveCount(0);
+  await expect(page.locator('.wwl-chat-stage')).toBeVisible();
 });
 

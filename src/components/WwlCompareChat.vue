@@ -8,6 +8,7 @@ import {
   getModelChoiceLabel,
 } from '@wwl/wwl-ai-chat';
 import { labsMarkdownToHtml } from '@wwl/wwl-ai-chat/markdown';
+import { localDemoChoiceLabel } from '../lib/flowchart-chat-mode.js';
 import { readChatPreferences } from '../lib/chat-preferences.js';
 import { CompareSession } from '../lib/compare-session.js';
 import WwlModelDetails from './WwlModelDetails.vue';
@@ -109,7 +110,7 @@ onBeforeUnmount(() => {
           <option value="" disabled>Choose a model</option>
           <optgroup v-for="group in groups" :key="group.id" :label="group.label">
             <option v-for="model in group.models" :key="model.id" :value="model.id">
-              {{ getModelChoiceLabel(model) }}
+              {{ localDemoChoiceLabel(getModelChoiceLabel(model)) }}
             </option>
           </optgroup>
         </select>
