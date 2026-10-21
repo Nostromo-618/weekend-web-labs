@@ -353,8 +353,7 @@ watch(demoSlug, (slug) => {
                 Weekend Web Labs is where I ship ideas before they are polished—interactive demos,
                 odd widgets, and half-serious prototypes that might graduate into the framework, or
                 might just be cool to try or play with. Most demos are not guaranteed stable; that
-                is the point. Some components are experimental prototypes that may graduate into the
-                framework.
+                is the point.
               </p>
               <div class="labs-about-grid">
                 <div class="labs-about-tile">
