@@ -4,7 +4,13 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist');
 const pagesBase = '/weekend-web-labs';
-const pending = ['/doc/wwl-ai-chat.html'];
+const docDir = path.join(root, 'doc');
+const pending = fs.existsSync(docDir)
+  ? fs
+      .readdirSync(docDir)
+      .filter((name) => name.endsWith('.html'))
+      .map((name) => `/doc/${name}`)
+  : [];
 const visited = new Set();
 const external = new Set();
 const errors = [];
