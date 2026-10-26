@@ -9,17 +9,6 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
-const litertRoot = path.dirname(require.resolve('@litert-lm/core/package.json'));
-const transformersRoot = path.resolve(
-  path.dirname(require.resolve('@huggingface/transformers')),
-  '..',
-);
-const ortRoot = path.resolve(
-  path.dirname(
-    createRequire(path.join(transformersRoot, 'package.json')).resolve('onnxruntime-web'),
-  ),
-  '..',
-);
 
 const localModelsDir = path.join(root, '.models');
 const vdlCbunRoot = path.resolve(root, '../wwl-cbun');
@@ -116,7 +105,7 @@ export default defineConfig(({ command, mode }) => ({
     },
     vue(),
     localModelsPlugin(mode === 'qa'),
-    staticAssetsPlugin({ root, litertRoot, ortRoot }),
+    staticAssetsPlugin({ root }),
   ],
   worker: { format: 'es' },
   resolve: {
@@ -131,7 +120,6 @@ export default defineConfig(({ command, mode }) => ({
     rolldownOptions: {
       input: {
         main: path.resolve(root, 'index.html'),
-        'ai-chat-demo': path.resolve(root, 'demo/ai-chat-demo.html'),
         ...(mode === 'qa'
           ? {
               'model-eval-harness': path.resolve(root, 'demo/model-eval-harness.html'),

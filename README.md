@@ -10,7 +10,7 @@ Clone the siblings beside this repo and build them before Labs:
 parent/
   weekend-web-labs/
   wwl-cbun/            Vue widgets (code editor, draw, hex grid, music player)
-  wwl-ai-chat/         headless on-device chat and guardrails
+
   wwl-hex-earth/       hex-grid Earth
 ```
 

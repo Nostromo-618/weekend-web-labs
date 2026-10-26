@@ -1,5 +1,3 @@
-import { labsMarkdownToHtml } from '@wwl/wwl-ai-chat/markdown';
-
 const entities = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'" };
 const decode = (text) => text.replace(/&(?:amp|lt|gt|quot|#39);/g, (value) => entities[value]);
 const escape = (text) =>
@@ -18,7 +16,7 @@ function joinBase(siteBase, pathname) {
 export function renderDocumentation(markdown, sourcePath, siteBase = '/') {
   const base = new URL(sourcePath, 'https://labs.invalid');
   const counts = new Map();
-  return labsMarkdownToHtml(markdown)
+  return markdown
     .replace(/<a href="([^"]*)"/g, (match, encoded) => {
       const href = decode(encoded);
       if (/^https?:/i.test(href)) return match;

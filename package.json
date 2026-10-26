@@ -2,7 +2,7 @@
   "name": "@wwl/weekend-web-labs",
   "version": "0.1.1",
   "private": true,
-  "description": "Weekend Web Labs — demo playground for WWL engines and wwl-cbun widgets (AiChat, draw, hex, code editor, music player)",
+  "description": "Weekend Web Labs \u2014 demo playground for WWL engines and wwl-cbun widgets (AiChat, draw, hex, code editor, music player)",
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -49,17 +49,9 @@
     "vite": "8.3.4"
   },
   "dependencies": {
-    "@huggingface/transformers": "4.3.1",
-    "@litert-lm/core": "0.18.0",
-    "@mlc-ai/web-llm": "0.2.86",
     "@vanduo-oss/vd3": "1.8.0",
-    "@vanduo-oss/vd3-charts": "1.1.1",
-    "@vanduo-oss/vd3-flowchart": "1.4.0",
-    "@wwl/wwl-ai-chat": "link:../wwl-ai-chat",
     "@wwl/wwl-cbun": "link:../wwl-cbun",
     "@wwl/wwl-hex-earth": "link:../wwl-hex-earth",
-    "onnxruntime-web": "1.31.0-dev.20260914-8d85527a0",
-    "phonemizer": "1.2.1",
     "vue": "3.5.44"
   },
   "packageManager": "pnpm@10.34.6",

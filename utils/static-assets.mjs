@@ -3,16 +3,8 @@ import path from 'node:path';
 import { documentationPage } from './documentation.mjs';
 
 /** Fixed local assets only: no glob parser, arbitrary paths, or remote executable code. */
-export function staticAssetsPlugin({ root, litertRoot, ortRoot }) {
+export function staticAssetsPlugin({ root }) {
   const files = new Map();
-  // Publish the exact sources used by this checkout without duplicating attribution data.
-  for (const [url, source] of [
-    ['/doc/chat-third-party-notices.md', '../wwl-ai-chat/THIRD_PARTY_NOTICES.md'],
-    ['/doc/chat-guardrail-provenance.json', '../wwl-ai-chat/src/guardrails/data/provenance.json'],
-    ['/doc/speech-source-provenance.md', 'src/lib/speech/PROVENANCE.md'],
-    ['/doc/kokoro-english-voices.json', 'src/lib/speech/voices.json'],
-  ])
-    files.set(url, path.resolve(root, source));
   const documents = new Map();
   function collectDocuments(directory, prefix = '/doc') {
     for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
@@ -28,10 +20,7 @@ export function staticAssetsPlugin({ root, litertRoot, ortRoot }) {
   collectDocuments(path.join(root, 'doc'));
   for (const [url, source] of files)
     if (url.endsWith('.md')) documents.set(url.slice(0, -3) + '.html', source);
-  for (const [directory, destination, accept] of [
-    [path.join(litertRoot, 'wasm'), 'litert-wasm', () => true],
-    [path.join(ortRoot, 'dist'), 'transformers-wasm', (name) => name.startsWith('ort-wasm')],
-  ]) {
+  for (const [directory, destination, accept] of []) {
     for (const name of fs.readdirSync(directory)) {
       const source = path.join(directory, name);
       if (accept(name) && fs.statSync(source).isFile())

@@ -13,7 +13,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
-import { BASELINE_MODEL_IDS, NEW_MODEL_IDS } from '@wwl/wwl-ai-chat';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = path.join(ROOT, 'qa/local-refresh/model-eval');
@@ -23,10 +22,7 @@ const PROFILE = path.resolve(
 
 const args = process.argv.slice(2);
 const modelsIdx = args.indexOf('--models');
-const models =
-  modelsIdx >= 0
-    ? args[modelsIdx + 1]
-    : process.env.MODEL_EVAL_MODELS || [...BASELINE_MODEL_IDS, ...NEW_MODEL_IDS].join(',');
+const models = modelsIdx >= 0 ? args[modelsIdx + 1] : process.env.MODEL_EVAL_MODELS || '';
 
 const base = (process.env.MODEL_EVAL_BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
 const timeoutMs = Number(process.env.MODEL_EVAL_TIMEOUT_MS || 45 * 60 * 1000);

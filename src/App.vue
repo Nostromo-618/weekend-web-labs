@@ -9,7 +9,7 @@ import {
   watch,
 } from 'vue';
 import { VdCard, VdIcon } from '@vanduo-oss/vd3';
-import { WWL_AI_CHAT_VERSION } from '@wwl/wwl-ai-chat';
+
 import { renderDocumentation } from '../utils/documentation.mjs';
 import { publicUrl } from './lib/public-url.js';
 import { TOC_VERSION } from './content/disclaimer.js';
@@ -23,7 +23,7 @@ import {
 import LabsSiteDock from './components/LabsSiteDock.vue';
 import LabsDisclaimerGate from './components/LabsDisclaimerGate.vue';
 import LabsFarewell from './components/LabsFarewell.vue';
-import WwlChatWorkbench from './components/WwlChatWorkbench.vue';
+
 import WwlHomeAtmosphere from './components/WwlHomeAtmosphere.vue';
 import WidgetsLanding from './components/widgets/WidgetsLanding.vue';
 import WidgetDraw from './pages/widgets/Draw.vue';
@@ -36,15 +36,13 @@ const HexEarthDemo = defineAsyncComponent(async () => {
   await import('@wwl/wwl-hex-earth/style.css');
   return mod.WwlHexEarthDemo;
 });
-const DEMO_SLUGS = new Set(['aichat', 'hex-earth']);
+const DEMO_SLUGS = new Set(['hex-earth']);
 const WIDGET_SLUGS = new Set(['draw', 'hex', 'code-editor', 'music-player']);
 const ROUTES = ['home', 'about', 'demos', 'widgets'];
 
 /** @typedef {'gate' | 'farewell' | 'accepted'} ConsentView */
 
-const COMPONENT_VERSION_MAP = {
-  aichat: WWL_AI_CHAT_VERSION,
-};
+const COMPONENT_VERSION_MAP = {};
 
 const consentView = ref(/** @type {ConsentView} */ ('gate'));
 const consentHydrated = ref(false);
@@ -61,12 +59,11 @@ const showFarewell = computed(() => consentHydrated.value && consentView.value =
 const appUnlocked = computed(() => consentHydrated.value && consentView.value === 'accepted');
 const hexEarthActive = computed(() => route.value === 'demos' && demoSlug.value === 'hex-earth');
 
-const docHtmlCache = { aichat: null };
+const docHtmlCache = {};
 let docLoadSeq = 0;
 /** Empty until first hash sync so the initial route change scrolls to top. */
 let lastTopLevelRoute = '';
 
-const aichatVersion = computed(() => `v${COMPONENT_VERSION_MAP.aichat}`);
 const hexEarthVersion = computed(() => 'v0.1.0');
 
 function getComponentVersion(slug) {
@@ -135,35 +132,12 @@ function parseLabsHash() {
   return { route: nextRoute, demoSlug: null, widgetSlug: null };
 }
 
-async function fetchDocumentationHtml(slug) {
-  if (slug !== 'aichat') return '';
-  if (docHtmlCache[slug]) return docHtmlCache[slug];
-  const path = '/doc/wwl-ai-chat.md';
-  const res = await fetch(publicUrl(path), { credentials: 'same-origin' });
-  if (!res.ok) throw new Error(`Could not load documentation (${res.status})`);
-  const md = hydrateComponentVersionTokens(await res.text(), slug);
-  docHtmlCache[slug] = renderDocumentation(md, path, import.meta.env.BASE_URL);
-  return docHtmlCache[slug];
+async function fetchDocumentationHtml() {
+  return '';
 }
 
-async function loadDocumentationForSlug(slug) {
-  if (slug !== 'aichat') return;
-  const seq = ++docLoadSeq;
-  docLoading.value = true;
-  docError.value = '';
-  docHtml.value = '';
-  try {
-    const html = await fetchDocumentationHtml(slug);
-    if (seq !== docLoadSeq) return;
-    docHtml.value = html;
-  } catch (err) {
-    if (seq !== docLoadSeq) return;
-    docError.value =
-      'Documentation could not be loaded. Check that <code>doc/wwl-ai-chat.md</code> is present, serve this folder over HTTP (not file://), then refresh.';
-    console.warn('[labs]', err);
-  } finally {
-    if (seq === docLoadSeq) docLoading.value = false;
-  }
+async function loadDocumentationForSlug() {
+  return;
 }
 
 function applyLabsRoute(nextRoute, nextDemoSlug, nextWidgetSlug) {
@@ -193,21 +167,15 @@ function applyLabsRoute(nextRoute, nextDemoSlug, nextWidgetSlug) {
 
   if (nextRoute === 'demos') {
     if (nextDemoSlug) {
-      const nameMap = {
-        aichat: 'wwl-ai-chat',
-      };
+      const nameMap = {};
       liveRegionText.value =
         (nameMap[nextDemoSlug] || nextDemoSlug) + ' demo and documentation opened.';
       loadDocumentationForSlug(nextDemoSlug);
       nextTick(() => {
-        const target =
-          nextDemoSlug === 'aichat'
-            ? document.querySelector('#labs-demos-detail .wwl-chat-workbench') ||
-              document.getElementById('labs-demos-detail')
-            : document.getElementById('labs-demos-detail');
+        const target = document.getElementById('labs-demos-detail');
         target?.scrollIntoView({
           behavior: 'smooth',
-          block: nextDemoSlug === 'aichat' ? 'start' : 'nearest',
+          block: 'nearest',
         });
       });
     } else {
@@ -395,10 +363,7 @@ watch(demoSlug, (slug) => {
         :aria-hidden="route === 'demos' ? 'false' : 'true'"
         :inert="route !== 'demos'"
       >
-        <div
-          class="vd-container-responsive labs-main"
-          :class="{ 'is-wide-demo': demoSlug === 'aichat' }"
-        >
+        <div class="vd-container-responsive labs-main" :class="{ 'is-wide-demo': false }">
           <section id="labs-demos" class="labs-section" aria-labelledby="labs-demos-heading">
             <div class="labs-page-header about-header">
               <h2 id="labs-demos-heading"><i class="ph ph-flask" aria-hidden="true"></i> Demos</h2>
@@ -407,32 +372,6 @@ watch(demoSlug, (slug) => {
               </p>
             </div>
             <div class="labs-demo-card-grid" role="list">
-              <button
-                type="button"
-                class="labs-demo-card"
-                id="labs-card-aichat"
-                data-demo-slug="aichat"
-                :class="{ 'is-selected': demoSlug === 'aichat' }"
-                :aria-pressed="demoSlug === 'aichat' ? 'true' : 'false'"
-                aria-controls="labs-demos-detail"
-                aria-describedby="labs-card-aichat-desc"
-                @click="selectDemo('aichat')"
-              >
-                <span class="labs-demo-card-icon" aria-hidden="true">
-                  <i class="ph ph-robot" style="font-size: 3rem"></i>
-                </span>
-                <span class="labs-demo-card-title">wwl-ai-chat</span>
-                <span class="labs-demo-card-desc" id="labs-card-aichat-desc"
-                  >In-browser AI chat with Gemma 4 and FOSS guardrails—no server required</span
-                >
-                <span class="labs-demo-card-source">Source: nostromo-618/weekend-web-labs</span>
-                <span class="labs-demo-card-badge-row">
-                  <span class="labs-demo-card-badge">Experimental</span>
-                  <span class="labs-demo-card-badge labs-demo-card-badge-version">{{
-                    aichatVersion
-                  }}</span>
-                </span>
-              </button>
               <button
                 type="button"
                 class="labs-demo-card"
@@ -478,7 +417,7 @@ watch(demoSlug, (slug) => {
                 <span class="labs-demo-card-icon" id="labs-demos-detail-icon" aria-hidden="true">
                   <i class="ph ph-robot" style="font-size: 2.25rem"></i>
                 </span>
-                <h2 id="labs-demos-detail-title">wwl-ai-chat</h2>
+                <h2 id="labs-demos-detail-title">Demo</h2>
               </div>
 
               <div class="labs-detail-stack-section">
@@ -488,9 +427,7 @@ watch(demoSlug, (slug) => {
                     class="labs-demo-panel-inner"
                     id="labs-demo-aichat"
                     :hidden="demoSlug !== 'aichat'"
-                  >
-                    <WwlChatWorkbench v-if="demoSlug === 'aichat'" />
-                  </div>
+                  ></div>
                 </div>
               </div>
 
