@@ -1,19 +1,7 @@
 import { test, expect } from '@playwright/test';
 import path from 'node:path';
+
 const shots = path.resolve('qa/local-refresh/screenshots');
-test('chat composer remains reachable when the viewport shrinks for a keyboard', async ({
-  page,
-}) => {
-  await page.goto('/tests/fixtures/chat-vue-harness.html');
-  await page.setViewportSize({ width: 390, height: 390 });
-  const input = page.getByRole('textbox', { name: 'Message' });
-  await input.fill('A short phone message');
-  await input.scrollIntoViewIfNeeded();
-  await expect(input).toBeInViewport();
-  await page.getByRole('button', { name: 'Send', exact: true }).click();
-  await expect(page.locator('[data-role="assistant"]')).toContainText('A short phone message');
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-});
 
 test('Hex Earth controls stay on the full stage without the labs dock', async ({ page }) => {
   await page.goto('/#demos/hex-earth');
@@ -62,91 +50,7 @@ async function main(page, route = 'home') {
     await page.getByTestId('disclaimer-accept').click();
   await expect(page.locator('nav.vd-site-dock')).toBeVisible();
 }
-test('Compare is lazy, keeps two pane statuses on mobile, and does not load models on entry', async ({
-  page,
-}, info) => {
-  const modelDownloads = [];
-  page.on('request', (request) => {
-    if (/huggingface|\.litertlm(?:\?|$)|params_shard_|onnx\/model_q4/.test(request.url()))
-      modelDownloads.push(request.url());
-  });
-  await main(page, 'demos/aichat');
-  const compareButton = page.getByRole('button', { name: 'Compare', exact: true });
-  await compareButton.click();
-  await expect(compareButton).toHaveAttribute('aria-pressed', 'true');
-  const modelA = page.getByLabel('Model A');
-  const modelB = page.getByLabel('Model B');
-  await expect(modelA).toHaveValue('gemma-4-E2B-it-web');
-  await expect(modelB).toHaveValue('');
-  await expect(page.getByRole('button', { name: 'Load pair' })).toBeDisabled();
-  await modelB.selectOption('LFM2.5-2.6B-q4f16-ONNX');
-  await expect(page.getByRole('button', { name: 'Load pair' })).toBeEnabled();
-  const tabs = page.locator('.wwl-compare-tabs');
-  await expect(tabs.locator('[role="tab"]')).toHaveCount(2);
-  if ((page.viewportSize()?.width || 0) <= 700) {
-    await expect(tabs).toBeVisible();
-    await tabs.locator('[role="tab"]').nth(1).click();
-    await expect(tabs.locator('[role="tab"]').nth(1)).toHaveAttribute('aria-selected', 'true');
-    await page.keyboard.press('ArrowLeft');
-    await expect(tabs.locator('[role="tab"]').nth(0)).toHaveAttribute('aria-selected', 'true');
-  }
-  expect(modelDownloads).toEqual([]);
-  await page.screenshot({
-    path: path.join(shots, `${info.project.name}-compare-setup.png`),
-    fullPage: true,
-  });
-  await page.getByRole('button', { name: 'Chat', exact: true }).click();
-  const openSettingsButton = page.getByRole('button', { name: 'Open Settings' });
-  if (await openSettingsButton.isVisible()) {
-    await openSettingsButton.click();
-  }
-  await expect(page.getByRole('button', { name: 'Load AI Model' })).toBeVisible();
-  expect(modelDownloads).toEqual([]);
-});
-test('actual Vue chat stops, resets, preserves General history, escapes HTML and honors IME', async ({
-  page,
-}, info) => {
-  await page.goto('/tests/fixtures/chat-vue-harness.html');
-  const input = page.getByRole('textbox', { name: 'Message' });
-  await expect(input).toBeVisible();
-  await input.fill('composing');
-  await input.dispatchEvent('keydown', { key: 'Enter', isComposing: true });
-  expect(await page.evaluate(() => window.chatQA.calls.length)).toBe(0);
-  await input.fill('hold');
-  await input.press('Enter');
-  await page.getByRole('button', { name: 'Stop', exact: true }).click();
-  await expect(page.locator('.wwl-ai-messages')).toContainText('Generation stopped');
-  await page.getByRole('button', { name: 'New conversation' }).click();
-  await input.fill('html');
-  await input.press('Enter');
-  await expect(page.locator('.wwl-ai-messages img')).toHaveCount(0);
-  expect(await page.evaluate(() => window.injected)).toBeUndefined();
-  await expect(page.getByLabel('Conversation', { exact: true })).toHaveCount(0);
-  await input.fill('follow up');
-  await input.press('Enter');
-  await expect(page.locator('.wwl-ai-messages')).toContainText('Answer: follow up');
-  await expect(page.locator('.wwl-ai-messages')).toContainText('onerror');
-  await page.screenshot({
-    path: path.join(shots, `${info.project.name}-chat-general.png`),
-    fullPage: true,
-  });
-  await input.fill('hold');
-  await input.press('Enter');
-  await page.evaluate(() => window.chatQA.unmount());
-  expect(await page.evaluate(() => window.chatQA.canceled)).toBeGreaterThan(0);
-});
-test('missing WebGPU is explained before any download', async ({ page }) => {
-  await page.addInitScript(() => Object.defineProperty(navigator, 'gpu', { value: undefined }));
-  await page.goto('/demo/ai-chat-demo.html');
-  const openSettings = page.getByRole('button', { name: 'Open Settings' });
-  if (await openSettings.isVisible()) {
-    await openSettings.click();
-  }
-  await expect(
-    page.getByRole('button', { name: /Load AI Model|Runtime unsupported/ }),
-  ).toBeDisabled();
-  await expect(page.locator('.wwl-ai-chat-primary')).toContainText(/WebGPU/);
-});
+
 test('Hex Earth lazy route hides the dock, keeps panels and gestures, and restores the shell on exit', async ({
   page,
 }, info) => {
@@ -207,17 +111,4 @@ test('Hex Earth lazy route hides the dock, keeps panels and gestures, and restor
   await page.goto('/#home');
   await expect(stage).toHaveCount(0);
   await expect(page.locator('nav.vd-site-dock')).toBeVisible();
-});
-
-test('General chat never requests documentation retrieval assets', async ({ page }) => {
-  const requests = [];
-  page.on('request', (request) => {
-    if (/\/data\/search/.test(request.url())) requests.push(request.url());
-  });
-  await page.goto('/tests/fixtures/chat-vue-harness.html');
-  const input = page.getByRole('textbox', { name: 'Message' });
-  await input.fill('VdDock placement');
-  await input.press('Enter');
-  await expect(page.locator('.wwl-ai-messages')).toContainText('Answer: VdDock placement');
-  expect(requests).toEqual([]);
 });

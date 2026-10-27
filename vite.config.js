@@ -3,68 +3,14 @@ import vue from '@vitejs/plugin-vue';
 import { staticAssetsPlugin } from './utils/static-assets.mjs';
 import fs from 'node:fs';
 import { createHash } from 'node:crypto';
-import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const require = createRequire(import.meta.url);
 
-const localModelsDir = path.join(root, '.models');
 const vdlCbunRoot = path.resolve(root, '../wwl-cbun');
 const vdlCbunDist = path.join(vdlCbunRoot, 'dist');
 const useLocalVdlCbun = fs.existsSync(path.join(vdlCbunDist, 'index.js'));
-
-/** Dev/QA preview only: serve `.models/<id>/…` at `/models/<id>/…` (never copied into `dist/`).
- *  Also accepts HuggingFace-style `/resolve/main/…` suffixes that WebLLM appends.
- */
-function localModelsPlugin(preview = false) {
-  const plugin = {
-    name: 'labs-local-models',
-    configureServer(server) {
-      server.middlewares.use('/models', (req, res, next) => {
-        try {
-          const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
-          let rel = urlPath.replace(/^\/+/, '');
-          // WebLLM HF URL helper: {model}/resolve/main/<file>
-          rel = rel.replace(/\/resolve\/(?:main|[a-f0-9]{40})(?=\/|$)/g, '');
-          if (!rel || rel.includes('..')) {
-            res.statusCode = 400;
-            res.end('Bad path');
-            return;
-          }
-          const filePath = path.join(localModelsDir, rel);
-          if (!filePath.startsWith(localModelsDir)) {
-            res.statusCode = 400;
-            res.end('Bad path');
-            return;
-          }
-          if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-            res.statusCode = 404;
-            res.end('Not found');
-            return;
-          }
-          const st = fs.statSync(filePath);
-          res.setHeader('Content-Length', String(st.size));
-          res.setHeader('Content-Type', 'application/octet-stream');
-          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-          res.setHeader('Accept-Ranges', 'bytes');
-          if (req.method === 'HEAD') {
-            res.end();
-            return;
-          }
-          const stream = fs.createReadStream(filePath);
-          res.on('close', () => stream.destroy());
-          stream.on('error', next).pipe(res);
-        } catch (err) {
-          next(err);
-        }
-      });
-    },
-  };
-  if (preview) plugin.configurePreviewServer = plugin.configureServer;
-  return plugin;
-}
 
 const vdlCbunAlias = useLocalVdlCbun
   ? {
@@ -81,7 +27,7 @@ const vdlCbunAlias = useLocalVdlCbun
     }
   : {};
 
-export default defineConfig(({ command, mode }) => ({
+export default defineConfig(({ command }) => ({
   // Project site: https://nostromo-618.github.io/weekend-web-labs/
   // Dev and Playwright keep `/` so the Vite server stays at the host root.
   base: command === 'build' ? '/weekend-web-labs/' : '/',
@@ -95,7 +41,7 @@ export default defineConfig(({ command, mode }) => ({
           const hashes = [
             ...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g),
           ].map((m) => `'sha256-${createHash('sha256').update(m[1]).digest('base64')}'`);
-          const policy = `default-src 'self'; script-src 'self' 'wasm-unsafe-eval' ${hashes.join(' ')}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' ws: wss: https://huggingface.co https://*.huggingface.co https://*.hf.co https://raw.githubusercontent.com; worker-src 'self' blob:; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'`;
+          const policy = `default-src 'self'; script-src 'self' 'wasm-unsafe-eval' ${hashes.join(' ')}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' ws: wss: https://raw.githubusercontent.com; worker-src 'self' blob:; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'`;
           return html.replace(
             '<head>',
             `<head><meta http-equiv="Content-Security-Policy" content="${policy}">`,
@@ -104,7 +50,6 @@ export default defineConfig(({ command, mode }) => ({
       },
     },
     vue(),
-    localModelsPlugin(mode === 'qa'),
     staticAssetsPlugin({ root }),
   ],
   worker: { format: 'es' },
@@ -120,16 +65,6 @@ export default defineConfig(({ command, mode }) => ({
     rolldownOptions: {
       input: {
         main: path.resolve(root, 'index.html'),
-        ...(mode === 'qa'
-          ? {
-              'model-eval-harness': path.resolve(root, 'demo/model-eval-harness.html'),
-              'speech-eval-harness': path.resolve(root, 'demo/speech-eval-harness.html'),
-              'conversation-eval-harness': path.resolve(
-                root,
-                'demo/conversation-eval-harness.html',
-              ),
-            }
-          : {}),
       },
     },
   },

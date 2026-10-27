@@ -2,7 +2,7 @@
   "name": "@wwl/weekend-web-labs",
   "version": "0.1.1",
   "private": true,
-  "description": "Weekend Web Labs \u2014 demo playground for WWL engines and wwl-cbun widgets (AiChat, draw, hex, code editor, music player)",
+  "description": "Weekend Web Labs — demo playground for wwl-cbun widgets and Hex Earth",
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -17,8 +17,8 @@
     "weekend-web-labs",
     "labs",
     "demo",
-    "ai-chat",
-    "model-eval"
+    "widgets",
+    "hex-earth"
   ],
   "scripts": {
     "dev": "vite",
@@ -26,18 +26,14 @@
     "build:qa": "vite build --mode qa",
     "preview": "vite preview",
     "demo:serve": "vite",
-    "models:fetch": "node utils/fetch-ai-models.mjs",
-    "speech:fetch": "node utils/fetch-speech-models.mjs",
     "docs:check": "node utils/check-chat-doc-links.mjs",
-    "model-eval": "node utils/model-eval-runner.mjs",
-    "lint": "eslint model-eval.js \"utils/**/*.{js,mjs}\" \"src/**/*.{js,mjs}\"",
-    "format": "prettier --write \"model-eval.js\" \"utils/**/*.{js,mjs}\" \"src/**/*.{js,mjs,vue,css}\"",
-    "format:check": "prettier --check \"model-eval.js\" \"utils/**/*.{js,mjs}\" \"src/**/*.{js,mjs,vue,css}\"",
+    "lint": "eslint \"utils/**/*.{js,mjs}\" \"src/**/*.{js,mjs}\"",
+    "format": "prettier --write \"utils/**/*.{js,mjs}\" \"src/**/*.{js,mjs,vue,css}\"",
+    "format:check": "prettier --check \"utils/**/*.{js,mjs}\" \"src/**/*.{js,mjs,vue,css}\"",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
     "test:unit": "playwright test tests/unit",
-    "test:local": "playwright test -c tests/local/playwright.config.ts",
     "report": "playwright show-report"
   },
   "devDependencies": {

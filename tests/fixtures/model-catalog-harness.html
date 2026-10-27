@@ -1,6 +1,0 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Catalog fixture</title></head><body><div id="app"></div><script type="module">
-import {createApp,h} from 'vue';
-import Compare from '/src/components/WwlCompareChat.vue';
-createApp({render:()=>h(Compare,{modelA:new URLSearchParams(location.search).get('model')||'gemma-4-E2B-it-web'})}).mount('#app');
-</script></body></html>

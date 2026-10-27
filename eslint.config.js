@@ -11,14 +11,13 @@ export default [
       'data/**',
       'playwright-report/**',
       'test-results/**',
-      'demo/**',
       'tests/**',
       'src/**/*.vue',
       'src/**/*.css',
     ],
   },
   {
-    files: ['model-eval.js', 'utils/**/*.{js,mjs}', 'src/**/*.{js,mjs}'],
+    files: ['utils/**/*.{js,mjs}', 'src/**/*.{js,mjs}'],
     languageOptions: {
       ecmaVersion: 2025,
       sourceType: 'module',

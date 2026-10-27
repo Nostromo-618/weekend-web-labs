@@ -48,5 +48,5 @@ export function documentationPage(markdown, sourcePath, siteBase = '/') {
 <title>${title} · Labs</title>
 <style>
 :root{color-scheme:light dark;font:16px/1.6 system-ui,sans-serif}body{max-width:920px;margin:0 auto;padding:24px;overflow-wrap:anywhere}a{color:light-dark(#075bbb,#8fbcff)}nav{display:flex;gap:24px;flex-wrap:wrap}h1,h2,h3{line-height:1.25}pre{overflow:auto;padding:16px;background:light-dark(#f2f4f6,#222);border-radius:8px}code{font-size:.9em}table{display:block;overflow:auto;border-collapse:collapse}td,th{padding:8px;border:1px solid #888}blockquote{margin-left:0;padding-left:16px;border-left:3px solid #888}@media(max-width:600px){body{padding:16px}}
-</style></head><body><nav><a href="${escape(joinBase(siteBase, '/'))}#demos/aichat">Back to AI Chat</a><a href="${escape(joinBase(siteBase, sourcePath))}">Source Markdown</a></nav><main>${body}</main></body></html>`;
+</style></head><body><nav><a href="${escape(joinBase(siteBase, '/'))}#home">Back to Labs</a><a href="${escape(joinBase(siteBase, sourcePath))}">Source Markdown</a></nav><main>${body}</main></body></html>`;
 }
