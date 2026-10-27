@@ -32,8 +32,10 @@ import WidgetCodeEditor from './pages/widgets/CodeEditor.vue';
 import WidgetMusicPlayer from './pages/widgets/MusicPlayer.vue';
 
 const HexEarthDemo = defineAsyncComponent(async () => {
-  const mod = await import('@wwl/wwl-hex-earth');
-  await import('@wwl/wwl-hex-earth/style.css');
+  const [mod] = await Promise.all([
+    import('@wwl/wwl-hex-earth'),
+    import('@wwl/wwl-hex-earth/style.css'),
+  ]);
   return mod.WwlHexEarthDemo;
 });
 const DEMO_SLUGS = new Set(['hex-earth']);
