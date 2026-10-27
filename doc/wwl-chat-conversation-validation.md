@@ -2,7 +2,7 @@
 
 > Historical initial acceptance snapshot. The fixed model/voice defaults and runtime versions below describe the original feature. See [current chat instructions](./wwl-ai-chat.md), [the latest streaming/conversation validation](./wwl-checked-stream-conversation-validation.md) and [dependency refresh history](./dependency-refresh-2026-10-04.md).
 
-Implemented on `codex/chat-conversation-mode` through OpenSpec `chat-conversation-mode`.
+Implemented on `codex/chat-conversation-mode` (change `chat-conversation-mode`).
 
 ## Actual models in Chrome
 
@@ -38,5 +38,5 @@ Firefox's existing capability checks are retained. Automated Firefox is blocked 
 
 - Focused Chromium/WebKit coverage: 94 distinct speech, controller and chat lifecycle checks. All 50 controller checks were rerun after the final permission-cancellation fix.
 - Actual installed Chrome: three consecutive automatic turns, cached offline operation, microphone reopening, non-silent output, model-blocked Resume; actual Silero silence/noise/speech and offline reload; manual neural playback, Whisper/Kokoro round-trip and microphone resampling.
-- Production build, ESLint (zero errors; ten existing unrelated warnings), Prettier and strict OpenSpec validation.
+- Production build, ESLint (zero errors; ten existing unrelated warnings), and Prettier.
 - Production excludes QA harnesses and local mirrors; executable/WASM stay local and the CSP directives remain unchanged.

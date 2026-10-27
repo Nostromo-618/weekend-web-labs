@@ -1,9 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { DISCLAIMER_GATE_ENABLED } from '../../src/lib/labs-flags.js';
 
 const TOC_KEY = 'wwl-toc-accepted';
 const DECLINED_KEY = 'wwl-toc-declined';
 
 test.describe('Labs disclaimer gate', () => {
+  test.skip(!DISCLAIMER_GATE_ENABLED, 'Set DISCLAIMER_GATE_ENABLED to true in labs-flags.js');
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       try {

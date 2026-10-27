@@ -29,7 +29,7 @@ sources.
 
 AI Draw, its planner, execution and logging paths, evaluation runner, UI and
 dedicated tests/docs are removed. The ordinary drawing widget and generic tool
-APIs remain. Historical reports, archived OpenSpec changes, downloaded weight
+APIs remain. Historical reports, archived change records, downloaded weight
 files and user chats are preserved. Explicitly authorized QA cache clearing was
 limited to chat-owned weight caches in dedicated test profiles.
 
@@ -84,7 +84,7 @@ see [OWASP's boundary guidance](https://cheatsheetseries.owasp.org/cheatsheets/L
 | Labs affected desktop/mobile Chromium checks   | 130 passed                                                                           |
 | Labs lint, formatting and production build     | Passed                                                                               |
 | Shipped-asset validation                       | 92 routes, both presets and production assets passed                                 |
-| Both coordinated OpenSpec changes              | Strict validation passed                                                             |
+| Cross-repo change coordination                 | Completed                                                                            |
 
 Boundary tests cover split output chunks, Unicode/encoded attacks, quoted
 educational discussion, sources/imported history, unsafe tool arguments/results,

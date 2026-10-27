@@ -20,7 +20,7 @@ All three installed-Chrome production checks passed: real session audio, speech 
 - Installed Chrome 154 ran the actual pinned q8 models with default Gemma E2B loaded. Cold remote downloads, silence, synthesis/transcription, fully offline inference in the loaded page, fresh workers with speech model networking blocked, local executable/WASM requests and the unchanged production CSP passed. All observed requests were GET/HEAD with no upload bodies.
 - Installed Safari 27.0.1 and Firefox 157 completed the same real synthesis-to-transcription phrase under production CSP. Both completed neural PCM playback and installed local system-voice playback. Safari captured 45,142 mono frames resampled to 16 kHz (2.821 seconds) and released its microphone. Firefox's Block permission action returned the expected access-denied error.
 - Chrome's fake microphone test exercised the actual AudioWorklet/OfflineAudioContext path and confirmed every media track ended. Microphone permission denial and silence preserve typed drafts in the Vue tests.
-- Lint has no errors; its 10 pre-existing draw warnings remain. Source formatting, production/QA builds and OpenSpec validation pass.
+- Lint has no errors; its 10 pre-existing draw warnings remain. Source formatting and production/QA builds pass.
 
 ## Measurements
 

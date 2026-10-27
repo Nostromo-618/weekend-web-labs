@@ -6,7 +6,7 @@ The shared Labs/standalone AI Chat now has a collapsible 320px controls panel, a
 
 ## Coverage
 
-**136 checks passed** in Playwright Chromium Desktop and WebKit Desktop. The installed-Chrome actual-model suite passed **two checks**, including three consecutive conversation turns. Production build, shipped asset/runtime/CSP validation and strict OpenSpec validation passed. ESLint reported zero errors and ten existing draw-tool warnings.
+**136 checks passed** in Playwright Chromium Desktop and WebKit Desktop. The installed-Chrome actual-model suite passed **two checks**, including three consecutive conversation turns. Production build and shipped asset/runtime/CSP validation passed. ESLint reported zero errors and ten existing draw-tool warnings.
 
 Focused Playwright coverage includes both themes at 1440×900, 1024×768, 820×700, 390×844 and 390×390; long markdown/code and six messages; composer reachability; independent scrolling; message-height stability when settings changes; draft and voice preference preservation; focus trapping/restoration; Escape/backdrop dismissal; nested storage confirmation; and pending download, recording, playback and conversation resizing.
 

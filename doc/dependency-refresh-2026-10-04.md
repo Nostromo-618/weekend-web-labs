@@ -63,7 +63,7 @@ Labs reports installed injected chat runtime versions rather than older catalog 
 - Conversation silence-to-submit: **2.30–2.36 s**; silence-to-first-audio: **4.66–8.14 s** over three turns. These are observations on this machine, not cross-device guarantees. Worker WASM and GPU allocations are not included in main-thread heap readings.
 - Real LFM2.5 causal chat completed a guarded answer and committed a two-message history using Transformers 4.3.0.
 - Production build passed. Runtime files, QA/model exclusion, and script CSP were checked.
-- ESLint: zero errors, 10 existing warnings in draw-stencils/draw-tools. Changed code formatted; OpenSpec strict validation passed.
+- ESLint: zero errors, 10 existing warnings in draw-stencils/draw-tools. Changed code formatted.
 - Actual-model Safari/Firefox speech certification was not added by this change.
 
 Review locally: [AI Chat](../demo/ai-chat-demo.html). No commit, push or deployment was made.

@@ -65,7 +65,7 @@ The parser's brace-expansion, jsdom's undici and stylelint's fast-uri findings a
 - Focused Labs speech, conversation and widget checks: all 102 covered cases passed across Chromium Desktop/WebKit Desktop, including corrected mock cleanup and a targeted successful rerun. Selection and microphone regression subset: 10 passed.
 - Existing chat lifecycle, comparison, and Hex Earth route/layout checks: 24 passed across Chromium Desktop/WebKit Desktop.
 - Local Codex in-app browser verification: selection highlight is visible; missing-microphone explanation and paused state appear before model loading.
-- Labs production build and shipped asset/CSP validation passed. Labs ESLint has zero errors and ten existing draw warnings. OpenSpec strict validation passed.
+- Labs production build and shipped asset/CSP validation passed. Labs ESLint has zero errors and ten existing draw warnings.
 
 Hex Earth's existing pinned Git CBUN dependency arrives without its `dist` exports under its current script-blocking configuration. A local node_modules link to the built CBUN sibling was used for validation; the Git pin, install policy and manifest were preserved. A fresh isolated Hex Earth install still needs that existing packaging/build issue resolved. This limitation is separate from the compatible dependency updates and Labs' existing local-link workflow.
 

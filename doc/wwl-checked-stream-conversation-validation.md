@@ -113,4 +113,4 @@ Public generation options add `delivery` and optional `onPreview`. Existing sync
 validators, result/error types, generic tool APIs and final callback signatures stay
 compatible. Speech APIs add optional voice identity with Heart as the default. Local
 consumers must render previews separately and keep speech behind final acceptance.
-OpenSpec changes and API notes are coordinated in both repositories.
+Change records and API notes are coordinated in both repositories.

@@ -464,6 +464,12 @@ body:has(main[data-labs-route]) {
   }
 }
 
+@media (min-width: 960px) {
+  .labs-about-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .labs-about-tile {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);

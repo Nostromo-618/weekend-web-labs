@@ -12,6 +12,7 @@ import { VdCard, VdIcon } from '@vanduo-oss/vd3';
 
 import { renderDocumentation } from '../utils/documentation.mjs';
 import { publicUrl } from './lib/public-url.js';
+import { DISCLAIMER_GATE_ENABLED } from './lib/labs-flags.js';
 import { TOC_VERSION } from './content/disclaimer.js';
 import {
   acceptDisclaimer as persistAccept,
@@ -77,6 +78,11 @@ function hydrateComponentVersionTokens(md, slug) {
 }
 
 function syncConsentFromStorage() {
+  if (!DISCLAIMER_GATE_ENABLED) {
+    consentView.value = 'accepted';
+    consentHydrated.value = true;
+    return;
+  }
   if (hasAcceptedDisclaimer(TOC_VERSION)) {
     consentView.value = 'accepted';
   } else if (hasDeclinedDisclaimer(TOC_VERSION)) {
@@ -213,7 +219,11 @@ function selectDemo(slug) {
 
 onMounted(() => {
   syncConsentFromStorage();
-  if (consentView.value === 'farewell' && parseLabsHash().route !== 'farewell') {
+  if (
+    DISCLAIMER_GATE_ENABLED &&
+    consentView.value === 'farewell' &&
+    parseLabsHash().route !== 'farewell'
+  ) {
     history.replaceState(null, '', '#farewell');
   }
   window.addEventListener('hashchange', syncLabsRouteFromHash);
@@ -332,8 +342,8 @@ watch(demoSlug, (slug) => {
                     <span>Try things</span>
                   </h3>
                   <p class="vd-text-muted">
-                    Grids, chat, and UI experiments invite you to click, drag, and break assumptions
-                    safely. If something misbehaves, I have learned something useful.
+                    Widgets and live demos invite you to click, drag, and break assumptions safely.
+                    If something misbehaves, I have learned something useful.
                   </p>
                 </div>
                 <div class="labs-about-tile">
@@ -346,11 +356,23 @@ watch(demoSlug, (slug) => {
                     reading a spec sheet. The GLaDOS jokes are optional; the curiosity is not.
                   </p>
                 </div>
+                <div class="labs-about-tile">
+                  <h3>
+                    <VdIcon name="shield-warning" aria-hidden="true" />
+                    <span>Expectations</span>
+                  </h3>
+                  <p class="vd-text-muted">
+                    Weekend Web Labs is a personal open-source playground—not a commercial product
+                    or professional legal, security, or production advice. Demos and widgets may
+                    change, break, or disappear; everything here is as-is with no warranties. Use
+                    Labs at your own risk and verify before relying on it in real projects.
+                  </p>
+                </div>
               </div>
               <div class="labs-about-cta">
                 <a href="#demos" class="vd-btn vd-btn-outline">Open live demos</a>
                 <span class="labs-about-cta-note vd-text-sm vd-text-muted"
-                  >AI chat, Hex Earth, and whatever I wire up next.</span
+                  >Hex Earth, widgets, and whatever I wire up next.</span
                 >
               </div>
             </VdCard>
@@ -369,9 +391,7 @@ watch(demoSlug, (slug) => {
           <section id="labs-demos" class="labs-section" aria-labelledby="labs-demos-heading">
             <div class="labs-page-header about-header">
               <h2 id="labs-demos-heading"><i class="ph ph-flask" aria-hidden="true"></i> Demos</h2>
-              <p class="vd-text-lg vd-text-muted">
-                Live component demos — AI chat, Hex Earth, and more.
-              </p>
+              <p class="vd-text-lg vd-text-muted">Live component demos — Hex Earth and more.</p>
             </div>
             <div class="labs-demo-card-grid" role="list">
               <button
